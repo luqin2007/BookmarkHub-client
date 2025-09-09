@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookmarkHub Manager - 演示</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            line-height: 1.6;
+            color: #333;
+        }
+        .demo-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #667eea;
+        }
+        .demo-data {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 0.5rem 0.5rem 0.5rem 0;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #5a67d8;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .feature-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+        }
+        .feature-card h3 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        .steps {
+            counter-reset: step-counter;
+        }
+        .step {
+            counter-increment: step-counter;
+            margin-bottom: 1.5rem;
+            padding-left: 3rem;
+            position: relative;
+        }
+        .step::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #667eea;
+            color: white;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>📚 BookmarkHub Manager - 演示页面</h1>
+    
+    <div class="demo-section">
+        <h2>🚀 快速开始</h2>
+        <p>这是一个功能完整的书签管理工具，支持从 GitHub Gist 同步 BookmarkHub 扩展的书签数据。</p>
+        <a href="index.html" class="btn">🔗 打开应用</a>
+        <a href="#demo-data" class="btn">📋 查看演示数据</a>
+    </div>
+
+    <div class="feature-grid">
+        <div class="feature-card">
+            <h3>🔄 GitHub 同步</h3>
+            <p>从 GitHub Gist 获取和同步书签数据，支持自动同步和手动同步。</p>
+        </div>
+        <div class="feature-card">
+            <h3>🔍 智能搜索</h3>
+            <p>实时搜索书签标题和 URL，支持模糊匹配和高亮显示。</p>
+        </div>
+        <div class="feature-card">
+            <h3>📁 文件夹管理</h3>
+            <p>创建、重命名、删除文件夹，支持拖拽排序和层级管理。</p>
+        </div>
+        <div class="feature-card">
+            <h3>🔒 隐私保护</h3>
+            <p>支持隐藏敏感书签，可设置密码保护隐藏内容。</p>
+        </div>
+        <div class="feature-card">
+            <h3>⚡ 批量操作</h3>
+            <p>支持批量删除、移动、修改书签，提高管理效率。</p>
+        </div>
+        <div class="feature-card">
+            <h3>🔧 实用工具</h3>
+            <p>链接有效性检查、撤销操作、数据导入导出等功能。</p>
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h2>📋 使用步骤</h2>
+        <div class="steps">
+            <div class="step">
+                <h3>准备 GitHub 凭据</h3>
+                <p>在 GitHub 创建 Personal Access Token，确保具有 gist 权限。</p>
+            </div>
+            <div class="step">
+                <h3>获取 Gist ID</h3>
+                <p>创建包含 BookmarkHub 数据的 Gist，或使用现有的 Gist ID。</p>
+            </div>
+            <div class="step">
+                <h3>配置应用</h3>
+                <p>在应用设置中输入 GitHub Token 和 Gist ID。</p>
+            </div>
+            <div class="step">
+                <h3>同步数据</h3>
+                <p>点击同步按钮获取书签数据，开始使用所有功能。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="demo-section" id="demo-data">
+        <h2>📊 演示数据格式</h2>
+        <p>以下是 BookmarkHub 扩展导出的标准数据格式示例：</p>
+        <div class="demo-data">
+{
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+  "version": "0.0.4",
+  "createDate": 1757174541418,
+  "bookmarks": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "dateLastUsed": 1741414031904,
+                  "syncing": false,
+                  "title": "Civitai: The Home of Open-Source Generative AI",
+                  "url": "https://civitai.com/"
+                },
+                {
+                  "dateLastUsed": 1741414041011,
+                  "syncing": false,
+                  "title": "Find Stable Diffusion models for your desired image style",
+                  "url": "https://www.findsd.art/find-sd"
+                }
+              ],
+              "syncing": false,
+              "title": "模型"
+            },
+            {
+              "children": [
+                {
+                  "dateLastUsed": 1706192654718,
+                  "syncing": false,
+                  "title": "Danbooru 标签超市",
+                  "url": "https://tags.novelai.dev/"
+                },
+                {
+                  "dateLastUsed": 1705242416792,
+                  "syncing": false,
+                  "title": "魔咒百科词典",
+                  "url": "https://aitag.top/"
+                }
+              ],
+              "syncing": false,
+              "title": "提示词"
+            }
+          ],
+          "syncing": false,
+          "title": "AI"
+        }
+      ],
+      "folderType": "bookmarks-bar",
+      "syncing": false,
+      "title": "ToolbarFolder"
+    }
+  ]
+}
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h2>🛠 技术特性</h2>
+        <ul>
+            <li><strong>纯前端应用</strong>：无需服务器，可部署到任何静态托管服务</li>
+            <li><strong>IndexedDB 存储</strong>：本地数据持久化，支持离线使用</li>
+            <li><strong>响应式设计</strong>：适配桌面和移动设备</li>
+            <li><strong>模块化架构</strong>：清晰的代码结构，易于维护和扩展</li>
+            <li><strong>现代 Web API</strong>：使用最新的浏览器功能</li>
+        </ul>
+    </div>
+
+    <div class="demo-section">
+        <h2>⚡ 快捷键</h2>
+        <ul>
+            <li><kbd>Ctrl+F</kbd> - 聚焦搜索框</li>
+            <li><kbd>Ctrl+Z</kbd> - 撤销上一个操作</li>
+            <li><kbd>Ctrl+S</kbd> - 同步书签数据</li>
+            <li><kbd>Esc</kbd> - 关闭当前对话框</li>
+        </ul>
+    </div>
+
+    <div class="demo-section">
+        <h2>🔗 相关链接</h2>
+        <a href="index.html" class="btn">🚀 启动应用</a>
+        <a href="https://github.com" class="btn">📱 GitHub</a>
+        <a href="https://gist.github.com" class="btn">📝 GitHub Gist</a>
+    </div>
+
+    <script>
+        // 简单的演示脚本
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('BookmarkHub Manager 演示页面已加载');
+            
+            // 添加一些交互效果
+            const cards = document.querySelectorAll('.feature-card');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                    this.style.boxShadow = '0 4px 20px rgba(0,0,0,0.15)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

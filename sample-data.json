@@ -1,0 +1,369 @@
+{
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+  "version": "1.0.0",
+  "createDate": 1704067200000,
+  "bookmarks": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "GitHub",
+              "url": "https://github.com"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Stack Overflow",
+              "url": "https://stackoverflow.com"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "MDN Web Docs",
+              "url": "https://developer.mozilla.org"
+            }
+          ],
+          "syncing": false,
+          "title": "开发工具"
+        },
+        {
+          "children": [
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Vue.js",
+              "url": "https://vuejs.org"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "React",
+              "url": "https://reactjs.org"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Angular",
+              "url": "https://angular.io"
+            }
+          ],
+          "syncing": false,
+          "title": "前端框架"
+        },
+        {
+          "children": [
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Node.js",
+              "url": "https://nodejs.org"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Express.js",
+              "url": "https://expressjs.com"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "MongoDB",
+              "url": "https://mongodb.com"
+            }
+          ],
+          "syncing": false,
+          "title": "后端技术"
+        }
+      ],
+      "syncing": false,
+      "title": "编程开发",
+      "folderType": "bookmarks-bar"
+    },
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "ChatGPT",
+              "url": "https://chat.openai.com"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Claude",
+              "url": "https://claude.ai"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Gemini",
+              "url": "https://gemini.google.com"
+            }
+          ],
+          "syncing": false,
+          "title": "AI 助手"
+        },
+        {
+          "children": [
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Midjourney",
+              "url": "https://midjourney.com"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "DALL-E",
+              "url": "https://openai.com/dall-e-2"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Stable Diffusion",
+              "url": "https://stability.ai"
+            }
+          ],
+          "syncing": false,
+          "title": "AI 绘画"
+        },
+        {
+          "children": [
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "GitHub Copilot",
+              "url": "https://github.com/features/copilot"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Cursor",
+              "url": "https://cursor.sh"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Replit",
+              "url": "https://replit.com"
+            }
+          ],
+          "syncing": false,
+          "title": "AI 编程"
+        }
+      ],
+      "syncing": false,
+      "title": "人工智能",
+      "folderType": "bookmarks-bar"
+    },
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Netflix",
+              "url": "https://netflix.com"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "YouTube",
+              "url": "https://youtube.com"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Bilibili",
+              "url": "https://bilibili.com"
+            }
+          ],
+          "syncing": false,
+          "title": "视频平台"
+        },
+        {
+          "children": [
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Spotify",
+              "url": "https://spotify.com"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Apple Music",
+              "url": "https://music.apple.com"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "网易云音乐",
+              "url": "https://music.163.com"
+            }
+          ],
+          "syncing": false,
+          "title": "音乐平台"
+        },
+        {
+          "children": [
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Steam",
+              "url": "https://store.steampowered.com"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Epic Games",
+              "url": "https://store.epicgames.com"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "PlayStation",
+              "url": "https://playstation.com"
+            }
+          ],
+          "syncing": false,
+          "title": "游戏平台"
+        }
+      ],
+      "syncing": false,
+      "title": "娱乐休闲",
+      "folderType": "bookmarks-bar"
+    },
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Gmail",
+              "url": "https://gmail.com"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Outlook",
+              "url": "https://outlook.com"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "QQ邮箱",
+              "url": "https://mail.qq.com"
+            }
+          ],
+          "syncing": false,
+          "title": "邮箱服务"
+        },
+        {
+          "children": [
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Google Drive",
+              "url": "https://drive.google.com"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Dropbox",
+              "url": "https://dropbox.com"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "OneDrive",
+              "url": "https://onedrive.live.com"
+            }
+          ],
+          "syncing": false,
+          "title": "云存储"
+        },
+        {
+          "children": [
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Notion",
+              "url": "https://notion.so"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Obsidian",
+              "url": "https://obsidian.md"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "Evernote",
+              "url": "https://evernote.com"
+            }
+          ],
+          "syncing": false,
+          "title": "笔记工具"
+        }
+      ],
+      "syncing": false,
+      "title": "办公工具",
+      "folderType": "bookmarks-bar"
+    },
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "私密网站1",
+              "url": "https://example-private1.com",
+              "hidden": true
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "私密网站2",
+              "url": "https://example-private2.com",
+              "hidden": true
+            }
+          ],
+          "syncing": false,
+          "title": "私密书签",
+          "hidden": true
+        },
+        {
+          "children": [
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "测试链接1",
+              "url": "https://httpstat.us/404"
+            },
+            {
+              "dateLastUsed": 1704067200000,
+              "syncing": false,
+              "title": "测试链接2",
+              "url": "https://httpstat.us/500"
+            }
+          ],
+          "syncing": false,
+          "title": "测试文件夹"
+        }
+      ],
+      "syncing": false,
+      "title": "其他",
+      "folderType": "bookmarks-bar"
+    }
+  ]
+}

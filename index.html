@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookmarkHub Manager</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div id="app">
+        <!-- 设置面板 -->
+        <div id="settings-panel" class="panel hidden">
+            <div class="panel-content">
+                <h2><i class="fas fa-cog"></i> 设置</h2>
+                <div class="form-group">
+                    <label for="github-token">GitHub Token:</label>
+                    <input type="password" id="github-token" placeholder="输入你的 GitHub Token">
+                </div>
+                <div class="form-group">
+                    <label for="gist-id">Gist ID:</label>
+                    <input type="text" id="gist-id" placeholder="输入 Gist ID">
+                </div>
+                <div class="form-group">
+                    <label for="hidden-password">隐藏书签密码:</label>
+                    <input type="password" id="hidden-password" placeholder="设置查看隐藏书签的密码">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="load-favicons" checked> 
+                        加载网站图标 (可能产生网络请求)
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button id="save-settings" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 保存设置
+                    </button>
+                    <button id="sync-bookmarks" class="btn btn-success">
+                        <i class="fas fa-sync"></i> 同步书签
+                    </button>
+                    <button id="close-settings" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> 关闭
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 密码输入面板 -->
+        <div id="password-panel" class="panel hidden">
+            <div class="panel-content">
+                <h2><i class="fas fa-lock"></i> 输入密码</h2>
+                <div class="form-group">
+                    <input type="password" id="password-input" placeholder="输入密码查看隐藏内容">
+                </div>
+                <div class="form-actions">
+                    <button id="verify-password" class="btn btn-primary">
+                        <i class="fas fa-unlock"></i> 确认
+                    </button>
+                    <button id="cancel-password" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> 取消
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主界面 -->
+        <div id="main-content">
+            <!-- 顶部工具栏 -->
+            <header class="toolbar">
+                <div class="toolbar-left">
+                    <h1><i class="fas fa-bookmark"></i> BookmarkHub Manager</h1>
+                </div>
+                <div class="toolbar-center">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="search-input" placeholder="搜索书签...">
+                        <button id="clear-search" class="btn-clear hidden">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="toolbar-right">
+                    <button id="show-hidden" class="btn btn-ghost" title="显示隐藏项">
+                        <i class="fas fa-eye-slash"></i>
+                    </button>
+                    <button id="check-links" class="btn btn-ghost" title="检查链接">
+                        <i class="fas fa-link"></i>
+                    </button>
+                    <button id="undo-action" class="btn btn-ghost" title="撤销" disabled>
+                        <i class="fas fa-undo"></i>
+                    </button>
+                    <button id="settings-btn" class="btn btn-ghost" title="设置">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- 两列布局内容区域 -->
+            <main class="content">
+                <div class="layout-container">
+                    <!-- 左侧文件夹目录 -->
+                    <aside class="sidebar">
+                        <div class="sidebar-header">
+                            <h3><i class="fas fa-folder"></i> 文件夹目录</h3>
+                        </div>
+                        <div id="folder-tree" class="folder-tree"></div>
+                    </aside>
+
+                    <!-- 右侧主内容区 -->
+                    <div class="main-area">
+                        <!-- 右侧顶部导航 - 只显示子目录 -->
+                        <nav class="content-nav">
+                            <div class="nav-section">
+                                <h4><i class="fas fa-folder-open"></i> 子目录</h4>
+                                <div id="subdirs-nav" class="nav-items"></div>
+                            </div>
+                        </nav>
+
+                        <!-- 书签内容显示区 -->
+                        <div id="bookmarks-container">
+                            <div id="loading" class="loading hidden">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <span>加载中...</span>
+                            </div>
+                            <div id="empty-state" class="empty-state">
+                                <i class="fas fa-bookmark"></i>
+                                <h3>暂无书签数据</h3>
+                                <p>请先配置 GitHub Token 和 Gist ID，然后同步书签数据</p>
+                                <button id="open-settings" class="btn btn-primary">
+                                    <i class="fas fa-cog"></i> 打开设置
+                                </button>
+                            </div>
+                            <div id="bookmarks-tree" class="bookmarks-tree"></div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- 右键菜单 -->
+        <div id="context-menu" class="context-menu hidden">
+            <div class="menu-item" data-action="open">
+                <i class="fas fa-external-link-alt"></i> 当前窗口打开
+            </div>
+            <div class="menu-item" data-action="open-new-tab">
+                <i class="fas fa-external-link-alt"></i> 新标签页打开
+            </div>
+            <div class="menu-separator"></div>
+            <div class="menu-item" data-action="add-bookmark">
+                <i class="fas fa-plus"></i> 添加书签
+            </div>
+            <div class="menu-item" data-action="add-folder">
+                <i class="fas fa-folder-plus"></i> 添加文件夹
+            </div>
+            <div class="menu-separator"></div>
+            <div class="menu-item" data-action="edit">
+                <i class="fas fa-edit"></i> 编辑
+            </div>
+            <div class="menu-item" data-action="rename">
+                <i class="fas fa-i-cursor"></i> 重命名
+            </div>
+            <div class="menu-item" data-action="copy-url">
+                <i class="fas fa-copy"></i> 复制链接
+            </div>
+            <div class="menu-separator"></div>
+            <div class="menu-item" data-action="cut">
+                <i class="fas fa-cut"></i> 剪切
+            </div>
+            <div class="menu-item" data-action="copy">
+                <i class="fas fa-copy"></i> 复制
+            </div>
+            <div class="menu-item" data-action="paste">
+                <i class="fas fa-paste"></i> 粘贴
+            </div>
+            <div class="menu-separator"></div>
+            <div class="menu-item" data-action="select">
+                <i class="fas fa-check-square"></i> 选择
+            </div>
+            <div class="menu-item" data-action="hide">
+                <i class="fas fa-eye-slash"></i> 隐藏
+            </div>
+            <div class="menu-item" data-action="delete">
+                <i class="fas fa-trash"></i> 删除
+            </div>
+        </div>
+
+        <!-- 编辑对话框 -->
+        <div id="edit-dialog" class="dialog hidden">
+            <div class="dialog-content">
+                <h3 id="edit-dialog-title">编辑书签</h3>
+                <form id="edit-form">
+                    <div class="form-group">
+                        <label for="edit-title">标题:</label>
+                        <input type="text" id="edit-title" required>
+                    </div>
+                    <div class="form-group" id="edit-url-group">
+                        <label for="edit-url">链接:</label>
+                        <input type="url" id="edit-url">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> 保存
+                        </button>
+                        <button type="button" id="cancel-edit" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> 取消
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 批量操作工具栏 -->
+        <div id="batch-toolbar" class="batch-toolbar hidden">
+            <div class="batch-info">
+                <span id="selected-count">0</span> 项已选择
+            </div>
+            <div class="batch-actions">
+                <button id="batch-delete" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> 删除
+                </button>
+                <button id="batch-hide" class="btn btn-secondary">
+                    <i class="fas fa-eye-slash"></i> 隐藏
+                </button>
+                <button id="batch-move" class="btn btn-secondary">
+                    <i class="fas fa-arrows-alt"></i> 移动
+                </button>
+                <button id="batch-export" class="btn btn-secondary">
+                    <i class="fas fa-download"></i> 导出
+                </button>
+                <button id="clear-selection" class="btn btn-ghost">
+                    <i class="fas fa-times"></i> 取消选择
+                </button>
+            </div>
+        </div>
+
+        <!-- 通知消息 -->
+        <div id="notifications" class="notifications"></div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/github.js"></script>
+    <script src="js/bookmarks.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

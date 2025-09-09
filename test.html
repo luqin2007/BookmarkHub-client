@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookmarkHub Manager - 测试页面</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        .test-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #28a745;
+        }
+        .test-data {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 0.5rem 0.5rem 0.5rem 0;
+            cursor: pointer;
+            border: none;
+            font-size: 0.9rem;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .result {
+            background: #e7f3ff;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            border-left: 4px solid #007bff;
+        }
+        .error {
+            background: #ffe7e7;
+            border-left-color: #dc3545;
+        }
+        .success {
+            background: #e7ffe7;
+            border-left-color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <h1>📚 BookmarkHub Manager - 测试页面</h1>
+    
+    <div class="test-section">
+        <h2>🧪 数据识别测试</h2>
+        <p>测试书签和文件夹的正确识别</p>
+        
+        <button class="btn" onclick="testDataRecognition()">运行识别测试</button>
+        <button class="btn" onclick="loadSampleData()">加载示例数据</button>
+        <button class="btn" onclick="testUIRendering()">测试UI渲染</button>
+        <button class="btn" onclick="clearTestData()">清除测试数据</button>
+        
+        <div id="recognition-result" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 测试数据</h2>
+        <p>包含文件夹和书签的混合数据结构</p>
+        
+        <div class="test-data" id="test-data-display">
+{
+  "browser": "Test Browser",
+  "version": "1.0.0",
+  "createDate": 1704067200000,
+  "bookmarks": [
+    {
+      "title": "开发工具",
+      "children": [
+        {
+          "title": "GitHub",
+          "url": "https://github.com",
+          "dateLastUsed": 1704067200000
+        },
+        {
+          "title": "Stack Overflow", 
+          "url": "https://stackoverflow.com",
+          "dateLastUsed": 1704067200000
+        }
+      ]
+    },
+    {
+      "title": "直接书签",
+      "url": "https://example.com",
+      "dateLastUsed": 1704067200000
+    },
+    {
+      "title": "空文件夹",
+      "children": []
+    }
+  ]
+}
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔗 功能测试</h2>
+        <p>测试各项功能是否正常工作</p>
+        
+        <button class="btn" onclick="testSearch()">测试搜索功能</button>
+        <button class="btn" onclick="testPathGeneration()">测试路径生成</button>
+        <button class="btn" onclick="testStorageRestore()">测试存储恢复</button>
+        
+        <div id="function-result" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📱 应用链接</h2>
+        <a href="index.html" class="btn">🚀 打开主应用</a>
+        <a href="demo.html" class="btn">📖 查看演示</a>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/github.js"></script>
+    <script src="js/bookmarks.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+    
+    <script>
+        // 测试数据
+        const testData = {
+            "browser": "Test Browser",
+            "version": "1.0.0", 
+            "createDate": 1704067200000,
+            "bookmarks": [
+                {
+                    "title": "开发工具",
+                    "children": [
+                        {
+                            "title": "GitHub",
+                            "url": "https://github.com",
+                            "dateLastUsed": 1704067200000
+                        },
+                        {
+                            "title": "Stack Overflow",
+                            "url": "https://stackoverflow.com", 
+                            "dateLastUsed": 1704067200000
+                        },
+                        {
+                            "title": "子文件夹",
+                            "children": [
+                                {
+                                    "title": "嵌套书签",
+                                    "url": "https://nested.example.com"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "title": "直接书签",
+                    "url": "https://example.com",
+                    "dateLastUsed": 1704067200000
+                },
+                {
+                    "title": "空文件夹",
+                    "children": []
+                },
+                {
+                    "title": "隐藏书签",
+                    "url": "https://hidden.example.com",
+                    "hidden": true
+                }
+            ]
+        };
+
+        // 等待应用初始化
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                if (!window.app) {
+                    console.log('等待应用初始化...');
+                    await new Promise(resolve => {
+                        const checkApp = () => {
+                            if (window.app && window.app.initialized) {
+                                resolve();
+                            } else {
+                                setTimeout(checkApp, 100);
+                            }
+                        };
+                        checkApp();
+                    });
+                }
+                console.log('测试页面准备就绪');
+            } catch (error) {
+                console.error('测试页面初始化失败:', error);
+            }
+        });
+
+        // 加载示例数据
+        async function loadSampleData() {
+            try {
+                const parseResult = window.githubManager.parseBookmarkHubData(testData);
+                if (parseResult.success) {
+                    await window.storageManager.saveBookmarks(parseResult.bookmarks);
+                    await window.bookmarkManager.loadBookmarks();
+                    showResult('recognition-result', '示例数据加载成功！', 'success');
+                } else {
+                    showResult('recognition-result', '数据解析失败: ' + parseResult.error, 'error');
+                }
+            } catch (error) {
+                showResult('recognition-result', '加载失败: ' + error.message, 'error');
+            }
+        }
+
+        // 测试数据识别
+        async function testDataRecognition() {
+            try {
+                await loadSampleData();
+                
+                const bookmarks = window.bookmarkManager.bookmarks;
+                const results = [];
+                
+                // 递归分析书签结构
+                function analyzeStructure(items, level = 0) {
+                    items.forEach(item => {
+                        const indent = '  '.repeat(level);
+                        if (item.children) {
+                            results.push(`${indent}📁 ${item.title} (文件夹, ${item.children.length} 项)`);
+                            analyzeStructure(item.children, level + 1);
+                        } else if (item.url) {
+                            results.push(`${indent}🔗 ${item.title} (书签: ${item.url})`);
+                        } else {
+                            results.push(`${indent}❓ ${item.title} (未知类型)`);
+                        }
+                    });
+                }
+                
+                analyzeStructure(bookmarks);
+                
+                const resultText = `数据结构分析结果：\n\n${results.join('\n')}\n\n统计信息：\n${JSON.stringify(window.bookmarkManager.getStatistics(), null, 2)}`;
+                showResult('recognition-result', resultText, 'success');
+                
+            } catch (error) {
+                showResult('recognition-result', '识别测试失败: ' + error.message, 'error');
+            }
+        }
+
+        // 测试搜索功能
+        async function testSearch() {
+            try {
+                await loadSampleData();
+                
+                const searchResults = await window.bookmarkManager.searchBookmarks('GitHub');
+                const resultText = `搜索 "GitHub" 的结果：\n\n${JSON.stringify(searchResults, null, 2)}`;
+                showResult('function-result', resultText, 'success');
+                
+            } catch (error) {
+                showResult('function-result', '搜索测试失败: ' + error.message, 'error');
+            }
+        }
+
+        // 测试路径生成
+        async function testPathGeneration() {
+            try {
+                await loadSampleData();
+                
+                const bookmarks = window.bookmarkManager.bookmarks;
+                const paths = [];
+                
+                function collectPaths(items, currentPath = '') {
+                    items.forEach(item => {
+                        const itemPath = currentPath ? `${currentPath}/${item.title}` : item.title;
+                        const uiPath = window.uiManager.getItemPath(item);
+                        
+                        paths.push({
+                            title: item.title,
+                            type: item.children ? '文件夹' : '书签',
+                            expectedPath: itemPath,
+                            uiPath: uiPath,
+                            match: itemPath === uiPath
+                        });
+                        
+                        if (item.children) {
+                            collectPaths(item.children, itemPath);
+                        }
+                    });
+                }
+                
+                collectPaths(bookmarks);
+                
+                const resultText = `路径生成测试结果：\n\n${paths.map(p => 
+                    `${p.type}: ${p.title}\n  期望路径: ${p.expectedPath}\n  UI路径: ${p.uiPath}\n  匹配: ${p.match ? '✅' : '❌'}`
+                ).join('\n\n')}`;
+                
+                showResult('function-result', resultText, 'success');
+                
+            } catch (error) {
+                showResult('function-result', '路径测试失败: ' + error.message, 'error');
+            }
+        }
+
+        // 测试存储恢复
+        async function testStorageRestore() {
+            try {
+                await loadSampleData();
+                
+                // 获取原始数据
+                const originalBookmarks = JSON.stringify(window.bookmarkManager.bookmarks);
+                
+                // 保存到存储
+                await window.storageManager.saveBookmarks(window.bookmarkManager.bookmarks);
+                
+                // 清空内存数据
+                window.bookmarkManager.bookmarks = [];
+                
+                // 从存储恢复
+                await window.bookmarkManager.loadBookmarks();
+                const restoredBookmarks = JSON.stringify(window.bookmarkManager.bookmarks);
+                
+                const match = originalBookmarks === restoredBookmarks;
+                const resultText = `存储恢复测试：\n\n数据完整性: ${match ? '✅ 通过' : '❌ 失败'}\n\n恢复的数据：\n${JSON.stringify(window.bookmarkManager.bookmarks, null, 2)}`;
+                
+                showResult('function-result', resultText, match ? 'success' : 'error');
+                
+            } catch (error) {
+                showResult('function-result', '存储测试失败: ' + error.message, 'error');
+            }
+        }
+
+        // 测试UI渲染
+        async function testUIRendering() {
+            try {
+                await loadSampleData();
+                
+                // 测试渲染结果
+                window.uiManager.renderBookmarks();
+                
+                // 检查渲染的元素
+                const bookmarkItems = document.querySelectorAll('.bookmark-item');
+                const folderHeaders = document.querySelectorAll('.folder-header');
+                
+                const results = [];
+                results.push(`渲染统计:`);
+                results.push(`- 书签项: ${bookmarkItems.length} 个`);
+                results.push(`- 文件夹: ${folderHeaders.length} 个`);
+                
+                // 检查是否有多余字符
+                let hasExtraChars = false;
+                bookmarkItems.forEach((item, index) => {
+                    const html = item.outerHTML;
+                    if (html.includes('">') || html.includes("'>")) {
+                        hasExtraChars = true;
+                        results.push(`❌ 书签项 ${index + 1} 包含多余字符`);
+                    }
+                });
+                
+                if (!hasExtraChars) {
+                    results.push(`✅ 所有书签项渲染正常，无多余字符`);
+                }
+                
+                // 测试右键菜单
+                results.push(`\n右键菜单测试:`);
+                const contextMenu = document.getElementById('context-menu');
+                if (contextMenu) {
+                    results.push(`✅ 右键菜单元素存在`);
+                } else {
+                    results.push(`❌ 右键菜单元素缺失`);
+                }
+                
+                // 测试事件绑定
+                let eventsBound = true;
+                bookmarkItems.forEach(item => {
+                    if (!item.onclick && !item.addEventListener) {
+                        eventsBound = false;
+                    }
+                });
+                
+                results.push(`事件绑定: ${eventsBound ? '✅ 正常' : '❌ 异常'}`);
+                
+                showResult('recognition-result', results.join('\n'), hasExtraChars ? 'error' : 'success');
+                
+            } catch (error) {
+                showResult('recognition-result', 'UI渲染测试失败: ' + error.message, 'error');
+            }
+        }
+
+        // 清除测试数据
+        async function clearTestData() {
+            try {
+                await window.storageManager.clearAllData();
+                window.bookmarkManager.bookmarks = [];
+                window.bookmarkManager.filteredBookmarks = [];
+                showResult('recognition-result', '测试数据已清除', 'success');
+            } catch (error) {
+                showResult('recognition-result', '清除失败: ' + error.message, 'error');
+            }
+        }
+
+        // 显示结果
+        function showResult(elementId, text, type = 'success') {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.style.display = 'block';
+            element.innerHTML = `<pre>${text}</pre>`;
+        }
+    </script>
+</body>
+</html>
