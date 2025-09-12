@@ -215,6 +215,10 @@ body {
 .folder-tree-item.active {
     background: #667eea;
     color: white;
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
 }
 
 .folder-tree-item.has-children {
