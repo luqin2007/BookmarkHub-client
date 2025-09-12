@@ -9,12 +9,14 @@ class BookmarkManager {
         this.draggedItem = null;
         this.undoStack = [];
         this.maxUndoStack = 20;
+        this.configCache = new Map(); // 缓存解析的配置项
     }
 
     // 加载书签数据
     async loadBookmarks() {
         try {
             this.bookmarks = await window.storageManager.getBookmarks();
+            this.parseConfigItems(); // 解析配置项
             this.applyFilters();
             return this.bookmarks;
         } catch (error) {
@@ -27,6 +29,7 @@ class BookmarkManager {
     async saveBookmarks() {
         try {
             await window.storageManager.saveBookmarks(this.bookmarks);
+            this.parseConfigItems(); // 重新解析配置项
             return true;
         } catch (error) {
             console.error('保存书签失败:', error);
@@ -486,6 +489,105 @@ class BookmarkManager {
     // 生成唯一ID
     generateId() {
         return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+
+    // 检查是否为配置项
+    isConfigItem(item) {
+        return item.url && item.url.startsWith('_config://');
+    }
+
+    // 解析配置URL
+    parseConfigUrl(url) {
+        try {
+            const configUrl = new URL(url.replace('_config://', 'config://'));
+            const type = configUrl.hostname;
+            const params = new URLSearchParams(configUrl.search);
+            
+            return {
+                type,
+                params: Object.fromEntries(params.entries())
+            };
+        } catch (error) {
+            console.warn('解析配置URL失败:', url, error);
+            return null;
+        }
+    }
+
+    // 解析所有配置项
+    parseConfigItems() {
+        this.configCache.clear();
+        this.processConfigItems(this.bookmarks);
+    }
+
+    // 递归处理配置项
+    processConfigItems(items) {
+        items.forEach(item => {
+            if (this.isConfigItem(item)) {
+                const config = this.parseConfigUrl(item.url);
+                if (config) {
+                    this.configCache.set(item.url, config);
+                    
+                    // 处理特定配置类型
+                    this.handleConfigItem(config, item);
+                }
+            }
+            
+            if (item.children) {
+                this.processConfigItems(item.children);
+            }
+        });
+    }
+
+    // 处理特定配置项
+    handleConfigItem(config, item) {
+        switch (config.type) {
+            case 'hidden':
+                if (config.params.pwd) {
+                    // 设置隐藏密码
+                    const settings = window.storageManager.getSettings();
+                    settings.hiddenPassword = config.params.pwd;
+                    window.storageManager.saveSettings(settings);
+                }
+                if (config.params.path) {
+                    // 标记指定路径为隐藏
+                    this.markItemAsHidden(config.params.path);
+                }
+                break;
+            // 可以添加更多配置类型
+        }
+    }
+
+    // 标记项目为隐藏
+    markItemAsHidden(path) {
+        const item = this.findItemByPath(path);
+        if (item) {
+            item.hidden = true;
+        }
+    }
+
+    // 检查文件夹是否只包含配置项
+    isConfigOnlyFolder(folder) {
+        if (!folder.children || folder.children.length === 0) {
+            return false;
+        }
+        
+        return folder.children.every(child => {
+            if (this.isConfigItem(child)) {
+                return true;
+            }
+            if (child.children) {
+                return this.isConfigOnlyFolder(child);
+            }
+            return false;
+        });
+    }
+
+    // 获取文件夹图标类型
+    getFolderIconType(folder) {
+        if (this.isConfigOnlyFolder(folder)) {
+            return 'config'; // 配置文件夹
+        }
+        return 'normal'; // 普通文件夹
     }
 
     // 获取统计信息

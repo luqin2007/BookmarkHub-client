@@ -735,12 +735,17 @@ class UIManager {
         const hasChildren = folder.children && folder.children.length > 0;
         const childrenClass = hasChildren ? 'has-children' : '';
         
+        // 检查是否为配置文件夹
+        const folderData = this.findFolderByTitle(window.bookmarkManager.filteredBookmarks, folder.title);
+        const isConfigFolder = folderData && window.bookmarkManager.isConfigOnlyFolder(folderData);
+        const folderIcon = isConfigFolder ? 'fa-cog' : (hasChildren ? (isExpanded ? 'fa-folder-open' : 'fa-folder') : 'fa-folder');
+        
         let html = `
             <div class="folder-tree-item ${activeClass} ${childrenClass}" 
                  data-folder-title="${folder.title}" 
                  data-path="${folder.path}"
                  style="padding-left: ${level * 0.5}rem">
-                <i class="fas ${hasChildren ? (isExpanded ? 'fa-folder-open' : 'fa-folder') : 'fa-folder'}"></i>
+                <i class="fas ${folderIcon}"></i>
                 <span class="folder-name">${folder.title}</span>
                 <span class="folder-count">${folder.count}</span>
             </div>
@@ -835,13 +840,19 @@ class UIManager {
             `;
         }
         
-        navItems += folders.map(folder => `
-            <div class="nav-item" data-folder-title="${folder.title}" data-path="${this.currentFolderPath ? this.currentFolderPath + '/' + this.encodeFolderName(folder.title) : this.encodeFolderName(folder.title)}">
-                <i class="fas fa-folder"></i>
-                <span>${folder.title}</span>
-                <span class="folder-count">${folder.children.length}</span>
-            </div>
-        `).join('');
+        navItems += folders.map(folder => {
+            // 检查是否为配置文件夹
+            const isConfigFolder = window.bookmarkManager.isConfigOnlyFolder(folder);
+            const folderIcon = isConfigFolder ? 'fa-cog' : 'fa-folder';
+            
+            return `
+                <div class="nav-item" data-folder-title="${folder.title}" data-path="${this.currentFolderPath ? this.currentFolderPath + '/' + this.encodeFolderName(folder.title) : this.encodeFolderName(folder.title)}">
+                    <i class="fas ${folderIcon}"></i>
+                    <span>${folder.title}</span>
+                    <span class="folder-count">${folder.children.length}</span>
+                </div>
+            `;
+        }).join('');
         
         container.innerHTML = navItems;
         
@@ -949,14 +960,19 @@ class UIManager {
         const safeTitle = bookmark.title.replace(/'/g, '&apos;').replace(/"/g, '&quot;');
         const safePath = itemPath.replace(/'/g, '&apos;');
         
+        // 检查是否为配置项
+        const isConfig = window.bookmarkManager.isConfigItem(bookmark);
+        const configClass = isConfig ? 'config-item' : '';
+        
         // 使用默认图标，避免网络请求错误
         const defaultFavicon = window.bookmarkManager.getDefaultFavicon();
         
         return `
-            <div class="bookmark-item ${hiddenClass}" 
+            <div class="bookmark-item ${hiddenClass} ${configClass}" 
                  style="margin-left: ${level * 20}px"
                  data-path="${safePath}"
                  data-url="${bookmark.url}">
+                ${isConfig ? '<i class="fas fa-cog config-icon"></i>' : ''}
                 <img class="bookmark-favicon" 
                      src="${defaultFavicon}" 
                      alt="favicon"
@@ -1027,14 +1043,19 @@ class UIManager {
         const safeTitle = bookmark.title.replace(/'/g, '&apos;').replace(/"/g, '&quot;');
         const safePath = itemPath.replace(/'/g, '&apos;');
         
+        // 检查是否为配置项
+        const isConfig = window.bookmarkManager.isConfigItem(bookmark);
+        const configClass = isConfig ? 'config-item' : '';
+        
         // 使用默认图标，避免网络请求错误
         const defaultFavicon = window.bookmarkManager.getDefaultFavicon();
         
         return `
-            <div class="bookmark-item ${hiddenClass}" 
+            <div class="bookmark-item ${hiddenClass} ${configClass}" 
                  style="margin-left: ${level * 20}px"
                  data-path="${itemPath}"
                  data-url="${bookmark.url}">
+                ${isConfig ? '<i class="fas fa-cog config-icon"></i>' : ''}
                 <img class="bookmark-favicon" 
                      src="${defaultFavicon}" 
                      alt="favicon"

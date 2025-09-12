@@ -926,6 +926,39 @@ body {
     font-weight: 500;
 }
 
+/* 配置项样式 */
+.config-item {
+    position: relative;
+}
+
+.config-icon {
+    position: absolute;
+    left: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #667eea;
+    font-size: 0.8rem;
+    z-index: 2;
+    background: white;
+    padding: 0.25rem;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.config-item .bookmark-favicon {
+    margin-left: 1.5rem;
+}
+
+.config-item .bookmark-info {
+    margin-left: 1.5rem;
+}
+
+/* 配置文件夹图标样式 */
+.folder-tree-item i.fa-cog,
+.nav-item i.fa-cog {
+    color: #667eea;
+}
+
 /* 拖拽样式 */
 .dragging {
     opacity: 0.5;
