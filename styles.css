@@ -215,10 +215,18 @@ body {
 .folder-tree-item.active {
     background: #667eea;
     color: white;
-    margin-left: -0.5rem;
-    margin-right: -0.5rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
+}
+
+.folder-tree-item.active::before {
+    content: '';
+    position: absolute;
+    left: -1rem;
+    right: -0.5rem;
+    top: 0;
+    bottom: 0;
+    background: #667eea;
+    border-radius: 6px;
+    z-index: -1;
 }
 
 .folder-tree-item.has-children {
@@ -257,7 +265,7 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding-right: 3rem;
+    padding-right: 4rem;
     min-width: 0;
 }
 
