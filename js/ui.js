@@ -739,9 +739,9 @@ class UIManager {
             <div class="folder-tree-item ${activeClass} ${childrenClass}" 
                  data-folder-title="${folder.title}" 
                  data-path="${folder.path}"
-                 style="padding-left: ${level * 1}rem">
+                 style="padding-left: ${level * 0.5}rem">
                 <i class="fas ${hasChildren ? (isExpanded ? 'fa-folder-open' : 'fa-folder') : 'fa-folder'}"></i>
-                <span>${folder.title}</span>
+                <span class="folder-name">${folder.title}</span>
                 <span class="folder-count">${folder.count}</span>
             </div>
         `;
