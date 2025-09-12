@@ -311,6 +311,13 @@ class UIManager {
             const btn = document.getElementById('show-hidden');
             const isShowing = btn.classList.contains('active');
             
+            if (!isShowing) {
+                // 需要密码验证
+                if (window.bookmarkManager.hiddenPassword) {
+                    this.showPasswordPanel();
+                    return;
+                }
+            }
             
             btn.classList.toggle('active');
             await window.bookmarkManager.toggleHiddenItems(!isShowing);
@@ -336,12 +343,19 @@ class UIManager {
 
     // 验证密码
     verifyPassword() {
-        // 密码功能已移除，直接显示隐藏项
-        this.hidePasswordPanel();
-        document.getElementById('show-hidden').classList.add('active');
-        window.bookmarkManager.toggleHiddenItems(true);
-        this.renderBookmarks();
-        this.showNotification('已显示隐藏项', 'success');
+        const password = document.getElementById('password-input').value;
+        const correctPassword = window.bookmarkManager.hiddenPassword;
+        
+        if (password === correctPassword) {
+            this.hidePasswordPanel();
+            document.getElementById('show-hidden').classList.add('active');
+            window.bookmarkManager.toggleHiddenItems(true);
+            this.renderBookmarks();
+            this.showNotification('密码正确，已显示隐藏项', 'success');
+        } else {
+            this.showNotification('密码错误', 'error');
+            document.getElementById('password-input').value = '';
+        }
     }
 
     // 检查所有链接
@@ -922,28 +936,33 @@ class UIManager {
         const isConfig = window.bookmarkManager.isConfigItem(bookmark);
         const configClass = isConfig ? 'config-item' : '';
         
-        // 使用默认图标，避免网络请求错误
+        // 配置项使用齿轮图标，普通书签使用网站图标
         const defaultFavicon = window.bookmarkManager.getDefaultFavicon();
+        const faviconElement = isConfig ? 
+            '<i class="fas fa-cog bookmark-favicon config-favicon"></i>' :
+            `<img class="bookmark-favicon" 
+                 src="${defaultFavicon}" 
+                 alt="favicon"
+                 data-original-url="${bookmark.url}">`;
         
         return `
             <div class="bookmark-item ${hiddenClass} ${configClass}" 
                  style="margin-left: ${level * 20}px"
                  data-path="${safePath}"
-                 data-url="${bookmark.url}">
-                ${isConfig ? '<i class="fas fa-cog config-icon"></i>' : ''}
-                <img class="bookmark-favicon" 
-                     src="${defaultFavicon}" 
-                     alt="favicon"
-                     data-original-url="${bookmark.url}">
+                 data-url="${bookmark.url}"
+                 data-is-config="${isConfig}">
+                ${faviconElement}
                 <div class="bookmark-info">
                     <div class="bookmark-title">${safeTitle}</div>
-                    <div class="bookmark-url">${bookmark.url}</div>
+                    ${isConfig ? '' : `<div class="bookmark-url">${bookmark.url}</div>`}
                 </div>
+                ${!isConfig ? `
                 <div class="bookmark-actions">
                     <button class="bookmark-action" title="新标签页打开" data-action="open-new">
                         <i class="fas fa-external-link-alt"></i>
                     </button>
                 </div>
+                ` : ''}
                 ${bookmark.hidden ? '<div class="hidden-indicator">隐藏</div>' : ''}
             </div>
         `;
@@ -1005,28 +1024,33 @@ class UIManager {
         const isConfig = window.bookmarkManager.isConfigItem(bookmark);
         const configClass = isConfig ? 'config-item' : '';
         
-        // 使用默认图标，避免网络请求错误
+        // 配置项使用齿轮图标，普通书签使用网站图标
         const defaultFavicon = window.bookmarkManager.getDefaultFavicon();
+        const faviconElement = isConfig ? 
+            '<i class="fas fa-cog bookmark-favicon config-favicon"></i>' :
+            `<img class="bookmark-favicon" 
+                 src="${defaultFavicon}" 
+                 alt="favicon"
+                 data-original-url="${bookmark.url}">`;
         
         return `
             <div class="bookmark-item ${hiddenClass} ${configClass}" 
                  style="margin-left: ${level * 20}px"
                  data-path="${itemPath}"
-                 data-url="${bookmark.url}">
-                ${isConfig ? '<i class="fas fa-cog config-icon"></i>' : ''}
-                <img class="bookmark-favicon" 
-                     src="${defaultFavicon}" 
-                     alt="favicon"
-                     data-original-url="${bookmark.url}">
+                 data-url="${bookmark.url}"
+                 data-is-config="${isConfig}">
+                ${faviconElement}
                 <div class="bookmark-info">
                     <div class="bookmark-title">${safeTitle}</div>
-                    <div class="bookmark-url">${bookmark.url}</div>
+                    ${isConfig ? '' : `<div class="bookmark-url">${bookmark.url}</div>`}
                 </div>
+                ${!isConfig ? `
                 <div class="bookmark-actions">
                     <button class="bookmark-action" title="新标签页打开" data-action="open-new">
                         <i class="fas fa-external-link-alt"></i>
                     </button>
                 </div>
+                ` : ''}
                 ${bookmark.hidden ? '<div class="hidden-indicator">隐藏</div>' : ''}
             </div>
         `;
@@ -1080,6 +1104,11 @@ class UIManager {
                 // 忽略图标和按钮点击
                 if (e.target.closest('.bookmark-action') || e.target.closest('.selectable-icon')) return;
                 e.stopPropagation();
+                
+                // 配置项不响应点击
+                const isConfig = item.dataset.isConfig === 'true';
+                if (isConfig) return;
+                
                 const url = item.dataset.url;
                 if (url) {
                     // 默认新窗口打开，Ctrl+点击当前窗口打开

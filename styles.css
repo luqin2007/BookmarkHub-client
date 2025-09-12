@@ -929,28 +929,23 @@ body {
 /* 配置项样式 */
 .config-item {
     position: relative;
+    cursor: default;
 }
 
-.config-icon {
-    position: absolute;
-    left: 0.5rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #667eea;
-    font-size: 0.8rem;
-    z-index: 2;
-    background: white;
-    padding: 0.25rem;
-    border-radius: 50%;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+.config-favicon {
+    color: #667eea !important;
+    font-size: 1.2rem;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
 }
 
-.config-item .bookmark-favicon {
-    margin-left: 1.5rem;
-}
-
-.config-item .bookmark-info {
-    margin-left: 1.5rem;
+.config-item:hover {
+    background: #f7fafc;
 }
 
 /* 配置文件夹图标样式 */

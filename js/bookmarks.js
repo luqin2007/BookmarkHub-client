@@ -8,6 +8,7 @@ class BookmarkManager {
         this.selectedItems = new Set();
         this.draggedItem = null;
         this.configCache = new Map(); // 缓存解析的配置项
+        this.hiddenPassword = null; // 从配置项中读取的隐藏密码
     }
 
     // 加载书签数据
@@ -449,6 +450,7 @@ class BookmarkManager {
     // 解析所有配置项
     parseConfigItems() {
         this.configCache.clear();
+        this.hiddenPassword = null; // 重置密码
         this.processConfigItems(this.bookmarks);
     }
 
@@ -475,6 +477,10 @@ class BookmarkManager {
     handleConfigItem(config, item) {
         switch (config.type) {
             case 'hidden':
+                if (config.params.pwd) {
+                    // 设置隐藏密码
+                    this.hiddenPassword = config.params.pwd;
+                }
                 if (config.params.path) {
                     // 标记指定路径为隐藏
                     this.markItemAsHidden(config.params.path);
