@@ -20,7 +20,6 @@ class UIManager {
     init() {
         this.bindEvents();
         this.loadExpandedState();
-        this.updateUndoButton();
         this.initRouting();
     }
 
@@ -66,9 +65,6 @@ class UIManager {
             this.checkAllLinks();
         });
 
-        document.getElementById('undo-action').addEventListener('click', () => {
-            this.undoLastAction();
-        });
 
         // 密码面板
         document.getElementById('verify-password').addEventListener('click', () => {
@@ -206,7 +202,6 @@ class UIManager {
         
         document.getElementById('github-token').value = settings.githubToken || '';
         document.getElementById('gist-id').value = settings.gistId || '';
-        document.getElementById('hidden-password').value = settings.hiddenPassword || '';
         document.getElementById('load-favicons').checked = settings.loadFavicons !== false; // 默认启用
         
         panel.classList.remove('hidden');
@@ -222,7 +217,6 @@ class UIManager {
         try {
             const token = document.getElementById('github-token').value.trim();
             const gistId = document.getElementById('gist-id').value.trim();
-            const password = document.getElementById('hidden-password').value;
 
             if (!token || !gistId) {
                 this.showNotification('请填写 GitHub Token 和 Gist ID', 'error');
@@ -243,7 +237,6 @@ class UIManager {
             const settings = {
                 githubToken: token,
                 gistId: gistId,
-                hiddenPassword: password,
                 loadFavicons: loadFavicons,
                 lastSaved: Date.now()
             };
@@ -318,14 +311,6 @@ class UIManager {
             const btn = document.getElementById('show-hidden');
             const isShowing = btn.classList.contains('active');
             
-            if (!isShowing) {
-                // 需要密码验证
-                const settings = window.storageManager.getSettings();
-                if (settings.hiddenPassword) {
-                    this.showPasswordPanel();
-                    return;
-                }
-            }
             
             btn.classList.toggle('active');
             await window.bookmarkManager.toggleHiddenItems(!isShowing);
@@ -351,19 +336,12 @@ class UIManager {
 
     // 验证密码
     verifyPassword() {
-        const password = document.getElementById('password-input').value;
-        const settings = window.storageManager.getSettings();
-        
-        if (password === settings.hiddenPassword) {
-            this.hidePasswordPanel();
-            document.getElementById('show-hidden').classList.add('active');
-            window.bookmarkManager.toggleHiddenItems(true);
-            this.renderBookmarks();
-            this.showNotification('密码正确，已显示隐藏项', 'success');
-        } else {
-            this.showNotification('密码错误', 'error');
-            document.getElementById('password-input').value = '';
-        }
+        // 密码功能已移除，直接显示隐藏项
+        this.hidePasswordPanel();
+        document.getElementById('show-hidden').classList.add('active');
+        window.bookmarkManager.toggleHiddenItems(true);
+        this.renderBookmarks();
+        this.showNotification('已显示隐藏项', 'success');
     }
 
     // 检查所有链接
@@ -401,24 +379,6 @@ class UIManager {
         });
     }
 
-    // 撤销最后操作
-    async undoLastAction() {
-        try {
-            const result = await window.bookmarkManager.undo();
-            this.renderBookmarks();
-            this.updateUndoButton();
-            this.showNotification('操作已撤销', 'success');
-        } catch (error) {
-            console.error('撤销失败:', error);
-            this.showNotification('撤销失败: ' + error.message, 'error');
-        }
-    }
-
-    // 更新撤销按钮状态
-    updateUndoButton() {
-        const btn = document.getElementById('undo-action');
-        btn.disabled = window.bookmarkManager.undoStack.length === 0;
-    }
 
     // 显示右键菜单
     showContextMenu(event) {
@@ -554,7 +514,6 @@ class UIManager {
                     if (confirm('确定要删除这个项目吗？')) {
                         await window.bookmarkManager.deleteItem(itemPath);
                         this.renderBookmarks();
-                        this.updateUndoButton();
                         this.showNotification('项目已删除', 'success');
                     }
                     break;
@@ -641,7 +600,6 @@ class UIManager {
             }
             
             this.renderBookmarks();
-            this.updateUndoButton();
             this.hideEditDialog();
             
         } catch (error) {
@@ -1386,7 +1344,6 @@ class UIManager {
             }
             
             this.renderBookmarks();
-            this.updateUndoButton();
             
         } catch (error) {
             console.error('粘贴失败:', error);
@@ -1476,7 +1433,6 @@ class UIManager {
             
             this.clearSelection();
             this.renderBookmarks();
-            this.updateUndoButton();
             this.showNotification(`已删除 ${paths.length} 个项目`, 'success');
             
         } catch (error) {
@@ -1522,7 +1478,6 @@ class UIManager {
             
             this.clearSelection();
             this.renderBookmarks();
-            this.updateUndoButton();
             this.showNotification(`已移动 ${paths.length} 个项目`, 'success');
             
         } catch (error) {
@@ -1574,10 +1529,6 @@ class UIManager {
     handleKeyboard(event) {
         if (event.ctrlKey || event.metaKey) {
             switch (event.key) {
-                case 'z':
-                    event.preventDefault();
-                    this.undoLastAction();
-                    break;
                 case 'f':
                     event.preventDefault();
                     document.getElementById('search-input').focus();

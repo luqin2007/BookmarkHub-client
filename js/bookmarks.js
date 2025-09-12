@@ -7,8 +7,6 @@ class BookmarkManager {
         this.showHidden = false;
         this.selectedItems = new Set();
         this.draggedItem = null;
-        this.undoStack = [];
-        this.maxUndoStack = 20;
         this.configCache = new Map(); // 缓存解析的配置项
     }
 
@@ -113,9 +111,6 @@ class BookmarkManager {
     // 添加书签
     async addBookmark(parentPath, bookmark) {
         try {
-            // 保存当前状态用于撤销
-            await this.saveUndoState('add', { parentPath, bookmark });
-            
             const parent = this.findItemByPath(parentPath);
             if (!parent || !parent.children) {
                 throw new Error('无效的父文件夹');
@@ -142,9 +137,6 @@ class BookmarkManager {
     // 添加文件夹
     async addFolder(parentPath, folderName) {
         try {
-            // 保存当前状态用于撤销
-            await this.saveUndoState('addFolder', { parentPath, folderName });
-            
             const parent = this.findItemByPath(parentPath);
             if (!parent || !parent.children) {
                 throw new Error('无效的父文件夹');
@@ -178,9 +170,6 @@ class BookmarkManager {
                 throw new Error('找不到指定项目');
             }
             
-            // 保存当前状态用于撤销
-            await this.saveUndoState('edit', { itemPath, oldData: { ...item } });
-            
             Object.assign(item, updates, { modified: Date.now() });
             await this.saveBookmarks();
             this.applyFilters();
@@ -200,9 +189,6 @@ class BookmarkManager {
                 throw new Error('找不到指定项目');
             }
             
-            // 保存当前状态用于撤销
-            await this.saveUndoState('delete', { itemPath, deletedItem: { ...item } });
-            
             this.removeItemByPath(itemPath);
             await this.saveBookmarks();
             this.applyFilters();
@@ -217,14 +203,6 @@ class BookmarkManager {
     // 批量删除
     async deleteItems(itemPaths) {
         try {
-            const deletedItems = itemPaths.map(path => ({
-                path,
-                item: { ...this.findItemByPath(path) }
-            }));
-            
-            // 保存当前状态用于撤销
-            await this.saveUndoState('batchDelete', { deletedItems });
-            
             itemPaths.forEach(path => this.removeItemByPath(path));
             await this.saveBookmarks();
             this.applyFilters();
@@ -245,9 +223,6 @@ class BookmarkManager {
             if (!item || !newParent || !newParent.children) {
                 throw new Error('无效的移动操作');
             }
-            
-            // 保存当前状态用于撤销
-            await this.saveUndoState('move', { itemPath, newParentPath, newIndex });
             
             // 从原位置移除
             this.removeItemByPath(itemPath);
@@ -277,9 +252,6 @@ class BookmarkManager {
             if (!item) {
                 throw new Error('找不到指定项目');
             }
-            
-            // 保存当前状态用于撤销
-            await this.saveUndoState('toggleVisibility', { itemPath, oldHidden: item.hidden });
             
             item.hidden = !item.hidden;
             item.modified = Date.now();
@@ -446,45 +418,6 @@ class BookmarkManager {
         return false;
     }
 
-    // 保存撤销状态
-    async saveUndoState(action, data) {
-        const undoState = {
-            action,
-            data,
-            timestamp: Date.now(),
-            bookmarks: JSON.parse(JSON.stringify(this.bookmarks))
-        };
-        
-        this.undoStack.push(undoState);
-        
-        // 限制撤销栈大小
-        if (this.undoStack.length > this.maxUndoStack) {
-            this.undoStack.shift();
-        }
-        
-        // 保存到持久化存储
-        await window.storageManager.saveHistory(action, data);
-    }
-
-    // 撤销操作
-    async undo() {
-        try {
-            if (this.undoStack.length === 0) {
-                throw new Error('没有可撤销的操作');
-            }
-            
-            const lastState = this.undoStack.pop();
-            this.bookmarks = lastState.bookmarks;
-            
-            await this.saveBookmarks();
-            this.applyFilters();
-            
-            return lastState;
-        } catch (error) {
-            console.error('撤销操作失败:', error);
-            throw error;
-        }
-    }
 
     // 生成唯一ID
     generateId() {
@@ -542,12 +475,6 @@ class BookmarkManager {
     handleConfigItem(config, item) {
         switch (config.type) {
             case 'hidden':
-                if (config.params.pwd) {
-                    // 设置隐藏密码
-                    const settings = window.storageManager.getSettings();
-                    settings.hiddenPassword = config.params.pwd;
-                    window.storageManager.saveSettings(settings);
-                }
                 if (config.params.path) {
                     // 标记指定路径为隐藏
                     this.markItemAsHidden(config.params.path);
