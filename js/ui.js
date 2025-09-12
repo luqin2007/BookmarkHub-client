@@ -13,6 +13,7 @@ class UIManager {
         this.batchMode = false;
         this.currentSelectedFolder = null;
         this.currentFolderContent = null;
+        this.currentFolderPath = ''; // 当前文件夹的完整路径
     }
 
     // 初始化 UI
@@ -20,6 +21,7 @@ class UIManager {
         this.bindEvents();
         this.loadExpandedState();
         this.updateUndoButton();
+        this.initRouting();
     }
 
     // 绑定事件
@@ -77,15 +79,6 @@ class UIManager {
             this.hidePasswordPanel();
         });
 
-        // 编辑对话框
-        document.getElementById('edit-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.saveEdit();
-        });
-
-        document.getElementById('cancel-edit').addEventListener('click', () => {
-            this.hideEditDialog();
-        });
 
         // 全局事件
         document.addEventListener('click', (e) => {
@@ -105,26 +98,105 @@ class UIManager {
             this.handleKeyboard(e);
         });
 
-        // 批量操作事件
-        document.getElementById('batch-delete').addEventListener('click', () => {
-            this.batchDelete();
+        // URL hash 变化监听
+        window.addEventListener('hashchange', () => {
+            this.handleRouteChange();
         });
 
-        document.getElementById('batch-hide').addEventListener('click', () => {
-            this.batchHide();
-        });
+    }
 
-        document.getElementById('batch-move').addEventListener('click', () => {
-            this.batchMove();
-        });
+    // 初始化路由
+    initRouting() {
+        this.handleRouteChange();
+    }
 
-        document.getElementById('batch-export').addEventListener('click', () => {
-            this.batchExport();
-        });
+    // 处理路由变化
+    handleRouteChange() {
+        const hash = window.location.hash;
+        if (hash.startsWith('#/')) {
+            const path = decodeURIComponent(hash.substring(2));
+            this.navigateToPath(path);
+        } else {
+            this.navigateToPath('');
+        }
+    }
 
-        document.getElementById('clear-selection').addEventListener('click', () => {
-            this.clearSelection();
-        });
+    // 更新URL
+    updateURL(path) {
+        const newHash = path ? `#/${encodeURIComponent(path)}` : '';
+        if (window.location.hash !== newHash) {
+            window.location.hash = newHash;
+        }
+    }
+
+    // 导航到指定路径
+    navigateToPath(path) {
+        this.currentFolderPath = path;
+        
+        if (!path) {
+            // 根目录
+            this.currentSelectedFolder = null;
+            this.currentFolderContent = null;
+        } else {
+            // 根据路径找到对应的文件夹
+            const folder = this.findFolderByPath(window.bookmarkManager.filteredBookmarks, path);
+            if (folder) {
+                this.currentSelectedFolder = folder.title;
+                this.currentFolderContent = folder.children || [];
+            } else {
+                // 路径无效，回到根目录
+                this.currentFolderPath = '';
+                this.currentSelectedFolder = null;
+                this.currentFolderContent = null;
+                this.updateURL('');
+            }
+        }
+        
+        // 重新渲染界面
+        this.renderBookmarks();
+        
+        // 更新文件夹树选中状态
+        this.updateFolderTreeSelection();
+    }
+
+    // 根据路径查找文件夹
+    findFolderByPath(bookmarks, path) {
+        if (!path) return null;
+        
+        const pathParts = path.split('/');
+        let current = bookmarks;
+        let currentFolder = null;
+        
+        for (const encodedPart of pathParts) {
+            // 解码路径部分
+            const part = this.decodeFolderName(encodedPart);
+            const found = current.find(item => item.title === part && item.children);
+            if (!found) return null;
+            
+            currentFolder = found;
+            current = found.children;
+        }
+        
+        return currentFolder;
+    }
+
+    // 获取当前路径的父路径
+    getParentFolderPath() {
+        if (!this.currentFolderPath) return '';
+        
+        const pathParts = this.currentFolderPath.split('/');
+        pathParts.pop();
+        return pathParts.join('/');
+    }
+
+    // 编码文件夹名称，避免路径分隔符冲突
+    encodeFolderName(name) {
+        return encodeURIComponent(name);
+    }
+
+    // 解码文件夹名称
+    decodeFolderName(encodedName) {
+        return decodeURIComponent(encodedName);
     }
 
     // 显示设置面板
@@ -445,10 +517,6 @@ class UIManager {
                     this.showAddDialog('folder', isFolder ? itemPath : this.getParentPath(itemPath));
                     break;
                     
-                case 'edit':
-                case 'rename':
-                    this.showEditDialog(itemPath);
-                    break;
                     
                 case 'copy-url':
                     if (url) {
@@ -475,9 +543,6 @@ class UIManager {
                     }
                     break;
                     
-                case 'select':
-                    this.toggleItemSelection(this.contextMenuTarget);
-                    break;
                     
                 case 'hide':
                     await window.bookmarkManager.toggleItemVisibility(itemPath);
@@ -605,11 +670,12 @@ class UIManager {
         // 渲染左侧文件夹树
         this.renderFolderTree(bookmarks);
         
-        // 渲染右侧导航
-        this.renderNavigation(bookmarks, bookmarks);
+        // 渲染右侧导航 - 显示当前选中文件夹的子目录
+        const currentFolderContent = this.currentFolderContent || bookmarks;
+        this.renderNavigation(bookmarks, currentFolderContent);
         
         // 渲染主内容区（只显示书签，不显示子目录）
-        container.innerHTML = this.renderBookmarksOnly(bookmarks);
+        container.innerHTML = this.renderBookmarksOnly(currentFolderContent);
         
         // 绑定事件
         this.bindBookmarkEvents();
@@ -628,17 +694,20 @@ class UIManager {
     }
     
     // 提取文件夹结构
-    extractFolders(bookmarks, level = 0) {
+    extractFolders(bookmarks, level = 0, parentPath = '') {
         const folders = [];
         
         bookmarks.forEach(item => {
             if (item.children && Array.isArray(item.children)) {
+                // 对文件夹名称进行编码，避免路径分隔符冲突
+                const encodedTitle = this.encodeFolderName(item.title);
+                const currentPath = parentPath ? `${parentPath}/${encodedTitle}` : encodedTitle;
                 const folderItem = {
                     title: item.title,
-                    path: this.getItemPath(item),
+                    path: currentPath,
                     count: this.countAllItems(item.children),
                     level: level,
-                    children: this.extractFolders(item.children, level + 1)
+                    children: this.extractFolders(item.children, level + 1, currentPath)
                 };
                 folders.push(folderItem);
             }
@@ -754,45 +823,56 @@ class UIManager {
         header.innerHTML = '<i class="fas fa-folder-open"></i> 子目录';
         
         const folders = items.filter(item => item.children && Array.isArray(item.children));
-        container.innerHTML = folders.map(folder => `
-            <div class="nav-item" data-folder-title="${folder.title}" data-path="${this.getItemPath(folder)}">
+        
+        // 添加返回上级目录选项
+        let navItems = '';
+        if (this.currentFolderPath) {
+            navItems += `
+                <div class="nav-item back-to-parent" data-folder-title="..">
+                    <i class="fas fa-level-up-alt"></i>
+                    <span>..</span>
+                </div>
+            `;
+        }
+        
+        navItems += folders.map(folder => `
+            <div class="nav-item" data-folder-title="${folder.title}" data-path="${this.currentFolderPath ? this.currentFolderPath + '/' + this.encodeFolderName(folder.title) : this.encodeFolderName(folder.title)}">
                 <i class="fas fa-folder"></i>
                 <span>${folder.title}</span>
                 <span class="folder-count">${folder.children.length}</span>
             </div>
         `).join('');
         
+        container.innerHTML = navItems;
+        
         // 绑定子目录导航事件
         container.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
                 const folderTitle = item.dataset.folderTitle;
-                this.selectFolder(folderTitle);
+                if (folderTitle === '..') {
+                    // 返回上级目录
+                    this.goToParentFolder();
+                } else {
+                    this.selectFolder(folderTitle);
+                }
             });
         });
     }
     
     // 选择文件夹
     selectFolder(folderTitle) {
-        this.currentSelectedFolder = folderTitle;
+        // 编码文件夹名称并构建新的路径
+        const encodedTitle = this.encodeFolderName(folderTitle);
+        const newPath = this.currentFolderPath ? `${this.currentFolderPath}/${encodedTitle}` : encodedTitle;
         
-        // 找到对应的文件夹内容
-        const folder = this.findFolderByTitle(window.bookmarkManager.filteredBookmarks, folderTitle);
-        if (folder && folder.children) {
-            this.currentFolderContent = folder.children;
-            
-            // 重新渲染主内容区（只显示书签）
-            const container = document.getElementById('bookmarks-tree');
-            container.innerHTML = this.renderBookmarksOnly(folder.children);
-            
-            // 重新渲染导航
-            this.renderNavigation(window.bookmarkManager.filteredBookmarks, folder.children);
-            
-            // 重新绑定事件
-            this.bindBookmarkEvents();
-        }
-        
-        // 更新文件夹树的选中状态
-        this.updateFolderTreeSelection();
+        // 更新URL并导航
+        this.updateURL(newPath);
+    }
+    
+    // 返回上级目录
+    goToParentFolder() {
+        const parentPath = this.getParentFolderPath();
+        this.updateURL(parentPath);
     }
     
     // 根据标题查找文件夹
@@ -812,8 +892,8 @@ class UIManager {
     // 更新文件夹树选中状态
     updateFolderTreeSelection() {
         document.querySelectorAll('.folder-tree-item').forEach(item => {
-            const folderTitle = item.dataset.folderTitle;
-            if (folderTitle === this.currentSelectedFolder) {
+            const folderPath = item.dataset.path;
+            if (folderPath === this.currentFolderPath) {
                 item.classList.add('active');
             } else {
                 item.classList.remove('active');
@@ -827,14 +907,15 @@ class UIManager {
             item.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const folderTitle = item.dataset.folderTitle;
+                const folderPath = item.dataset.path;
                 
                 // 如果有子文件夹，切换展开状态
                 if (item.classList.contains('has-children')) {
                     this.toggleFolder(folderTitle);
                 }
                 
-                // 选择文件夹
-                this.selectFolder(folderTitle);
+                // 导航到文件夹路径
+                this.updateURL(folderPath);
             });
         });
     }
@@ -864,7 +945,6 @@ class UIManager {
     // 渲染书签（带指定路径）
     renderBookmarkWithPath(bookmark, level, itemPath) {
         const hiddenClass = bookmark.hidden ? 'hidden-item' : '';
-        const selectedClass = this.selectedItems.has(itemPath) ? 'selected' : '';
         const safeUrl = bookmark.url.replace(/'/g, '&apos;');
         const safeTitle = bookmark.title.replace(/'/g, '&apos;').replace(/"/g, '&quot;');
         const safePath = itemPath.replace(/'/g, '&apos;');
@@ -873,24 +953,19 @@ class UIManager {
         const defaultFavicon = window.bookmarkManager.getDefaultFavicon();
         
         return `
-            <div class="bookmark-item ${hiddenClass} ${selectedClass}" 
+            <div class="bookmark-item ${hiddenClass}" 
                  style="margin-left: ${level * 20}px"
                  data-path="${safePath}"
                  data-url="${bookmark.url}">
-                <img class="bookmark-favicon selectable-icon" 
+                <img class="bookmark-favicon" 
                      src="${defaultFavicon}" 
                      alt="favicon"
-                     data-original-url="${bookmark.url}"
-                     data-path="${safePath}"
-                     title="点击选择/取消选择">
+                     data-original-url="${bookmark.url}">
                 <div class="bookmark-info">
                     <div class="bookmark-title">${safeTitle}</div>
                     <div class="bookmark-url">${bookmark.url}</div>
                 </div>
                 <div class="bookmark-actions">
-                    <button class="bookmark-action" title="编辑" data-action="edit">
-                        <i class="fas fa-edit"></i>
-                    </button>
                     <button class="bookmark-action" title="新标签页打开" data-action="open-new">
                         <i class="fas fa-external-link-alt"></i>
                     </button>
@@ -948,7 +1023,6 @@ class UIManager {
     renderBookmark(bookmark, level) {
         const hiddenClass = bookmark.hidden ? 'hidden-item' : '';
         const itemPath = this.getItemPath(bookmark);
-        const selectedClass = this.selectedItems.has(itemPath) ? 'selected' : '';
         const safeUrl = bookmark.url.replace(/'/g, '&apos;');
         const safeTitle = bookmark.title.replace(/'/g, '&apos;').replace(/"/g, '&quot;');
         const safePath = itemPath.replace(/'/g, '&apos;');
@@ -957,24 +1031,19 @@ class UIManager {
         const defaultFavicon = window.bookmarkManager.getDefaultFavicon();
         
         return `
-            <div class="bookmark-item ${hiddenClass} ${selectedClass}" 
+            <div class="bookmark-item ${hiddenClass}" 
                  style="margin-left: ${level * 20}px"
                  data-path="${itemPath}"
                  data-url="${bookmark.url}">
-                <img class="bookmark-favicon selectable-icon" 
+                <img class="bookmark-favicon" 
                      src="${defaultFavicon}" 
                      alt="favicon"
-                     data-original-url="${bookmark.url}"
-                     data-path="${safePath}"
-                     title="点击选择/取消选择">
+                     data-original-url="${bookmark.url}">
                 <div class="bookmark-info">
                     <div class="bookmark-title">${safeTitle}</div>
                     <div class="bookmark-url">${bookmark.url}</div>
                 </div>
                 <div class="bookmark-actions">
-                    <button class="bookmark-action" title="编辑" data-action="edit">
-                        <i class="fas fa-edit"></i>
-                    </button>
                     <button class="bookmark-action" title="新标签页打开" data-action="open-new">
                         <i class="fas fa-external-link-alt"></i>
                     </button>
@@ -1043,41 +1112,17 @@ class UIManager {
                 }
             });
             
-            // 双击编辑
-            item.addEventListener('dblclick', (e) => {
-                if (e.target.closest('.selectable-icon')) return;
-                e.stopPropagation();
-                this.showEditDialog(item.dataset.path);
-            });
         });
         
         // 文件夹头部点击事件
         document.querySelectorAll('.folder-header').forEach(item => {
             // 单击展开/折叠
             item.addEventListener('click', (e) => {
-                // 忽略复选框点击
-                if (e.target.closest('.item-checkbox')) return;
                 e.stopPropagation();
                 const folderTitle = item.dataset.folderTitle;
                 if (folderTitle) {
                     this.toggleFolder(folderTitle);
                 }
-            });
-            
-            // 双击编辑
-            item.addEventListener('dblclick', (e) => {
-                if (e.target.closest('.item-checkbox')) return;
-                e.stopPropagation();
-                this.showEditDialog(item.dataset.path);
-            });
-        });
-        
-        // 图标选择事件
-        document.querySelectorAll('.selectable-icon').forEach(icon => {
-            icon.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const path = icon.dataset.path;
-                this.toggleBookmarkSelection(path);
             });
         });
         
@@ -1087,13 +1132,9 @@ class UIManager {
                 e.stopPropagation();
                 const bookmarkItem = e.target.closest('.bookmark-item');
                 const url = bookmarkItem.dataset.url;
-                const path = bookmarkItem.dataset.path;
                 const action = button.dataset.action;
                 
                 switch (action) {
-                    case 'edit':
-                        this.showEditDialog(path);
-                        break;
                     case 'open-new':
                         if (url) window.open(url, '_blank');
                         break;

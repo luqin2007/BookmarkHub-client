@@ -153,12 +153,6 @@
                 <i class="fas fa-folder-plus"></i> 添加文件夹
             </div>
             <div class="menu-separator"></div>
-            <div class="menu-item" data-action="edit">
-                <i class="fas fa-edit"></i> 编辑
-            </div>
-            <div class="menu-item" data-action="rename">
-                <i class="fas fa-i-cursor"></i> 重命名
-            </div>
             <div class="menu-item" data-action="copy-url">
                 <i class="fas fa-copy"></i> 复制链接
             </div>
@@ -173,9 +167,6 @@
                 <i class="fas fa-paste"></i> 粘贴
             </div>
             <div class="menu-separator"></div>
-            <div class="menu-item" data-action="select">
-                <i class="fas fa-check-square"></i> 选择
-            </div>
             <div class="menu-item" data-action="hide">
                 <i class="fas fa-eye-slash"></i> 隐藏
             </div>
@@ -184,54 +175,7 @@
             </div>
         </div>
 
-        <!-- 编辑对话框 -->
-        <div id="edit-dialog" class="dialog hidden">
-            <div class="dialog-content">
-                <h3 id="edit-dialog-title">编辑书签</h3>
-                <form id="edit-form">
-                    <div class="form-group">
-                        <label for="edit-title">标题:</label>
-                        <input type="text" id="edit-title" required>
-                    </div>
-                    <div class="form-group" id="edit-url-group">
-                        <label for="edit-url">链接:</label>
-                        <input type="url" id="edit-url">
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> 保存
-                        </button>
-                        <button type="button" id="cancel-edit" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> 取消
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
 
-        <!-- 批量操作工具栏 -->
-        <div id="batch-toolbar" class="batch-toolbar hidden">
-            <div class="batch-info">
-                <span id="selected-count">0</span> 项已选择
-            </div>
-            <div class="batch-actions">
-                <button id="batch-delete" class="btn btn-danger">
-                    <i class="fas fa-trash"></i> 删除
-                </button>
-                <button id="batch-hide" class="btn btn-secondary">
-                    <i class="fas fa-eye-slash"></i> 隐藏
-                </button>
-                <button id="batch-move" class="btn btn-secondary">
-                    <i class="fas fa-arrows-alt"></i> 移动
-                </button>
-                <button id="batch-export" class="btn btn-secondary">
-                    <i class="fas fa-download"></i> 导出
-                </button>
-                <button id="clear-selection" class="btn btn-ghost">
-                    <i class="fas fa-times"></i> 取消选择
-                </button>
-            </div>
-        </div>
 
         <!-- 通知消息 -->
         <div id="notifications" class="notifications"></div>

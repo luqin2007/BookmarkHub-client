@@ -203,6 +203,9 @@ body {
     transition: all 0.2s ease;
     font-size: 0.9rem;
     color: #4a5568;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .folder-tree-item:hover {
