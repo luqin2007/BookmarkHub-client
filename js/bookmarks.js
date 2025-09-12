@@ -493,13 +493,13 @@ class BookmarkManager {
 
     // 检查是否为配置项
     isConfigItem(item) {
-        return item.url && item.url.startsWith('_config://');
+        return item.url && item.url.startsWith('uiconfig://');
     }
 
     // 解析配置URL
     parseConfigUrl(url) {
         try {
-            const configUrl = new URL(url.replace('_config://', 'config://'));
+            const configUrl = new URL(url.replace('uiconfig://', 'config://'));
             const type = configUrl.hostname;
             const params = new URLSearchParams(configUrl.search);
             
