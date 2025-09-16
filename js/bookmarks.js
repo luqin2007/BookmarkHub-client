@@ -5,8 +5,6 @@ class BookmarkManager {
         this.filteredBookmarks = [];
         this.searchQuery = '';
         this.showHidden = false;
-        this.selectedItems = new Set();
-        this.draggedItem = null;
         this.configCache = new Map(); // 缓存解析的配置项
         this.hiddenPassword = null; // 从配置项中读取的隐藏密码
     }
@@ -109,163 +107,6 @@ class BookmarkManager {
         return this.filteredBookmarks;
     }
 
-    // 添加书签
-    async addBookmark(parentPath, bookmark) {
-        try {
-            const parent = this.findItemByPath(parentPath);
-            if (!parent || !parent.children) {
-                throw new Error('无效的父文件夹');
-            }
-            
-            const newBookmark = {
-                ...bookmark,
-                id: this.generateId(),
-                created: Date.now(),
-                modified: Date.now()
-            };
-            
-            parent.children.push(newBookmark);
-            await this.saveBookmarks();
-            this.applyFilters();
-            
-            return newBookmark;
-        } catch (error) {
-            console.error('添加书签失败:', error);
-            throw error;
-        }
-    }
-
-    // 添加文件夹
-    async addFolder(parentPath, folderName) {
-        try {
-            const parent = this.findItemByPath(parentPath);
-            if (!parent || !parent.children) {
-                throw new Error('无效的父文件夹');
-            }
-            
-            const newFolder = {
-                id: this.generateId(),
-                title: folderName,
-                children: [],
-                isFolder: true,
-                created: Date.now(),
-                modified: Date.now()
-            };
-            
-            parent.children.push(newFolder);
-            await this.saveBookmarks();
-            this.applyFilters();
-            
-            return newFolder;
-        } catch (error) {
-            console.error('添加文件夹失败:', error);
-            throw error;
-        }
-    }
-
-    // 编辑书签/文件夹
-    async editItem(itemPath, updates) {
-        try {
-            const item = this.findItemByPath(itemPath);
-            if (!item) {
-                throw new Error('找不到指定项目');
-            }
-            
-            Object.assign(item, updates, { modified: Date.now() });
-            await this.saveBookmarks();
-            this.applyFilters();
-            
-            return item;
-        } catch (error) {
-            console.error('编辑项目失败:', error);
-            throw error;
-        }
-    }
-
-    // 删除项目
-    async deleteItem(itemPath) {
-        try {
-            const item = this.findItemByPath(itemPath);
-            if (!item) {
-                throw new Error('找不到指定项目');
-            }
-            
-            this.removeItemByPath(itemPath);
-            await this.saveBookmarks();
-            this.applyFilters();
-            
-            return true;
-        } catch (error) {
-            console.error('删除项目失败:', error);
-            throw error;
-        }
-    }
-
-    // 批量删除
-    async deleteItems(itemPaths) {
-        try {
-            itemPaths.forEach(path => this.removeItemByPath(path));
-            await this.saveBookmarks();
-            this.applyFilters();
-            
-            return true;
-        } catch (error) {
-            console.error('批量删除失败:', error);
-            throw error;
-        }
-    }
-
-    // 移动项目
-    async moveItem(itemPath, newParentPath, newIndex = -1) {
-        try {
-            const item = this.findItemByPath(itemPath);
-            const newParent = this.findItemByPath(newParentPath);
-            
-            if (!item || !newParent || !newParent.children) {
-                throw new Error('无效的移动操作');
-            }
-            
-            // 从原位置移除
-            this.removeItemByPath(itemPath);
-            
-            // 添加到新位置
-            if (newIndex >= 0 && newIndex < newParent.children.length) {
-                newParent.children.splice(newIndex, 0, item);
-            } else {
-                newParent.children.push(item);
-            }
-            
-            item.modified = Date.now();
-            await this.saveBookmarks();
-            this.applyFilters();
-            
-            return true;
-        } catch (error) {
-            console.error('移动项目失败:', error);
-            throw error;
-        }
-    }
-
-    // 隐藏/显示项目
-    async toggleItemVisibility(itemPath) {
-        try {
-            const item = this.findItemByPath(itemPath);
-            if (!item) {
-                throw new Error('找不到指定项目');
-            }
-            
-            item.hidden = !item.hidden;
-            item.modified = Date.now();
-            
-            await this.saveBookmarks();
-            this.applyFilters();
-            
-            return item.hidden;
-        } catch (error) {
-            console.error('切换可见性失败:', error);
-            throw error;
-        }
-    }
 
     // 检查链接有效性
     async checkLinkValidity(url) {
@@ -401,23 +242,6 @@ class BookmarkManager {
         return current;
     }
 
-    // 根据路径移除项目
-    removeItemByPath(path) {
-        const pathParts = path.split('/');
-        const itemTitle = pathParts.pop();
-        const parentPath = pathParts.join('/');
-        
-        const parent = parentPath ? this.findItemByPath(parentPath) : { children: this.bookmarks };
-        if (!parent || !parent.children) return false;
-        
-        const index = parent.children.findIndex(item => item.title === itemTitle);
-        if (index >= 0) {
-            parent.children.splice(index, 1);
-            return true;
-        }
-        
-        return false;
-    }
 
 
     // 生成唯一ID

@@ -70,13 +70,22 @@ class GitHubManager {
             // 查找包含书签数据的文件
             const files = Object.values(gist.files);
             let bookmarkFile = null;
+            
+            // 获取设置中的文件名
+            const settings = window.storageManager.getSettings();
+            const expectedFilename = (settings.gistFilename || 'BookmarkHub') + '.json';
 
-            // 优先查找 .json 文件
-            bookmarkFile = files.find(file => 
-                file.filename.endsWith('.json') || 
-                file.filename.includes('bookmark') ||
-                file.filename.includes('BookmarkHub')
-            );
+            // 优先查找设置中指定的文件名
+            bookmarkFile = files.find(file => file.filename === expectedFilename);
+            
+            // 如果没找到，再按照原来的逻辑查找
+            if (!bookmarkFile) {
+                bookmarkFile = files.find(file => 
+                    file.filename.endsWith('.json') || 
+                    file.filename.includes('bookmark') ||
+                    file.filename.includes('BookmarkHub')
+                );
+            }
 
             // 如果没找到，使用第一个文件
             if (!bookmarkFile && files.length > 0) {
@@ -106,7 +115,12 @@ class GitHubManager {
     }
 
     // 更新 Gist 内容
-    async updateGistContent(bookmarkData, filename = 'bookmarks.json') {
+    async updateGistContent(bookmarkData, filename = null) {
+        // 如果没有提供文件名，从设置中获取
+        if (!filename) {
+            const settings = window.storageManager.getSettings();
+            filename = (settings.gistFilename || 'BookmarkHub') + '.json';
+        }
         if (!this.token || !this.gistId) {
             throw new Error('GitHub Token 或 Gist ID 未设置');
         }
@@ -147,7 +161,12 @@ class GitHubManager {
     }
 
     // 创建新的 Gist
-    async createGist(bookmarkData, filename = 'bookmarks.json', description = 'BookmarkHub 书签数据') {
+    async createGist(bookmarkData, filename = null, description = 'BookmarkHub 书签数据') {
+        // 如果没有提供文件名，从设置中获取
+        if (!filename) {
+            const settings = window.storageManager.getSettings();
+            filename = (settings.gistFilename || 'BookmarkHub') + '.json';
+        }
         if (!this.token) {
             throw new Error('GitHub Token 未设置');
         }

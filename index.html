@@ -22,6 +22,10 @@
                     <input type="text" id="gist-id" placeholder="输入 Gist ID">
                 </div>
                 <div class="form-group">
+                    <label for="gist-filename">Gist文件名:</label>
+                    <input type="text" id="gist-filename" placeholder="BookmarkHub" value="BookmarkHub">
+                </div>
+                <div class="form-group">
                     <label>
                         <input type="checkbox" id="load-favicons" checked> 
                         加载网站图标 (可能产生网络请求)
@@ -130,43 +134,6 @@
             </main>
         </div>
 
-        <!-- 右键菜单 -->
-        <div id="context-menu" class="context-menu hidden">
-            <div class="menu-item" data-action="open">
-                <i class="fas fa-external-link-alt"></i> 当前窗口打开
-            </div>
-            <div class="menu-item" data-action="open-new-tab">
-                <i class="fas fa-external-link-alt"></i> 新标签页打开
-            </div>
-            <div class="menu-separator"></div>
-            <div class="menu-item" data-action="add-bookmark">
-                <i class="fas fa-plus"></i> 添加书签
-            </div>
-            <div class="menu-item" data-action="add-folder">
-                <i class="fas fa-folder-plus"></i> 添加文件夹
-            </div>
-            <div class="menu-separator"></div>
-            <div class="menu-item" data-action="copy-url">
-                <i class="fas fa-copy"></i> 复制链接
-            </div>
-            <div class="menu-separator"></div>
-            <div class="menu-item" data-action="cut">
-                <i class="fas fa-cut"></i> 剪切
-            </div>
-            <div class="menu-item" data-action="copy">
-                <i class="fas fa-copy"></i> 复制
-            </div>
-            <div class="menu-item" data-action="paste">
-                <i class="fas fa-paste"></i> 粘贴
-            </div>
-            <div class="menu-separator"></div>
-            <div class="menu-item" data-action="hide">
-                <i class="fas fa-eye-slash"></i> 隐藏
-            </div>
-            <div class="menu-item" data-action="delete">
-                <i class="fas fa-trash"></i> 删除
-            </div>
-        </div>
 
 
 

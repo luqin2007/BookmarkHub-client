@@ -1,16 +1,8 @@
 // UI 管理模块
 class UIManager {
     constructor() {
-        this.currentEditingItem = null;
-        this.contextMenuTarget = null;
         this.notifications = [];
         this.expandedFolders = new Set();
-        this.selectedItems = new Set();
-        this.draggedItem = null;
-        this.dropZone = null;
-        this.clipboard = null;
-        this.clipboardAction = null; // 'cut' or 'copy'
-        this.batchMode = false;
         this.currentSelectedFolder = null;
         this.currentFolderContent = null;
         this.currentFolderPath = ''; // 当前文件夹的完整路径
@@ -76,23 +68,12 @@ class UIManager {
         });
 
 
-        // 全局事件
-        document.addEventListener('click', (e) => {
-            this.hideContextMenu();
-        });
 
-        document.addEventListener('contextmenu', (e) => {
-            const target = e.target.closest('.bookmark-item') || e.target.closest('.folder-header');
-            if (target) {
-                e.preventDefault();
-                this.showContextMenu(e);
-            }
-        });
 
-        // 键盘快捷键
-        document.addEventListener('keydown', (e) => {
-            this.handleKeyboard(e);
-        });
+        // 键盘快捷键 - 暂时禁用
+        // document.addEventListener('keydown', (e) => {
+        //     this.handleKeyboard(e);
+        // });
 
         // URL hash 变化监听
         window.addEventListener('hashchange', () => {
@@ -202,6 +183,7 @@ class UIManager {
         
         document.getElementById('github-token').value = settings.githubToken || '';
         document.getElementById('gist-id').value = settings.gistId || '';
+        document.getElementById('gist-filename').value = settings.gistFilename || 'BookmarkHub';
         document.getElementById('load-favicons').checked = settings.loadFavicons !== false; // 默认启用
         
         panel.classList.remove('hidden');
@@ -217,6 +199,7 @@ class UIManager {
         try {
             const token = document.getElementById('github-token').value.trim();
             const gistId = document.getElementById('gist-id').value.trim();
+            const gistFilename = document.getElementById('gist-filename').value.trim() || 'BookmarkHub';
 
             if (!token || !gistId) {
                 this.showNotification('请填写 GitHub Token 和 Gist ID', 'error');
@@ -237,6 +220,7 @@ class UIManager {
             const settings = {
                 githubToken: token,
                 gistId: gistId,
+                gistFilename: gistFilename,
                 loadFavicons: loadFavicons,
                 lastSaved: Date.now()
             };
@@ -394,233 +378,7 @@ class UIManager {
     }
 
 
-    // 显示右键菜单
-    showContextMenu(event) {
-        const menu = document.getElementById('context-menu');
-        const target = event.target.closest('.bookmark-item, .folder-header');
-        
-        if (!target) return;
-        
-        this.contextMenuTarget = target;
-        
-        // 根据目标类型调整菜单项
-        const isFolder = target.classList.contains('folder-header');
-        const hasUrl = !!target.dataset.url;
-        
-        // 显示/隐藏相关菜单项
-        this.toggleMenuItem(menu, 'open', hasUrl);
-        this.toggleMenuItem(menu, 'open-new-tab', hasUrl);
-        this.toggleMenuItem(menu, 'copy-url', hasUrl);
-        
-        // 检查剪贴板状态
-        const canPaste = this.clipboard && (isFolder || this.getParentPath(target.dataset.path));
-        this.toggleMenuItem(menu, 'paste', canPaste);
-        
-        // 清除之前的事件监听器
-        menu.querySelectorAll('.menu-item').forEach(item => {
-            const newItem = item.cloneNode(true);
-            item.parentNode.replaceChild(newItem, item);
-        });
-        
-        // 重新绑定菜单项事件
-        menu.querySelectorAll('.menu-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.handleContextMenuAction(item.dataset.action);
-            });
-        });
-        
-        // 计算菜单位置，确保不超出屏幕
-        const menuRect = menu.getBoundingClientRect();
-        let x = event.pageX;
-        let y = event.pageY;
-        
-        // 防止菜单超出右边界
-        if (x + 200 > window.innerWidth) {
-            x = window.innerWidth - 200;
-        }
-        
-        // 防止菜单超出下边界
-        if (y + 300 > window.innerHeight) {
-            y = window.innerHeight - 300;
-        }
-        
-        // 显示菜单
-        menu.style.left = x + 'px';
-        menu.style.top = y + 'px';
-        menu.classList.remove('hidden');
-    }
 
-    // 切换菜单项显示状态
-    toggleMenuItem(menu, action, show) {
-        const item = menu.querySelector(`[data-action="${action}"]`);
-        if (item) {
-            item.style.display = show ? 'flex' : 'none';
-        }
-    }
-
-    // 隐藏右键菜单
-    hideContextMenu() {
-        document.getElementById('context-menu').classList.add('hidden');
-        this.contextMenuTarget = null;
-    }
-
-    // 处理右键菜单操作
-    async handleContextMenuAction(action) {
-        if (!this.contextMenuTarget) return;
-        
-        const itemPath = this.contextMenuTarget.dataset.path;
-        const url = this.contextMenuTarget.dataset.url;
-        const isFolder = this.contextMenuTarget.classList.contains('folder-header');
-        
-        try {
-            switch (action) {
-                case 'open':
-                    if (url) window.open(url, '_self');
-                    break;
-                    
-                case 'open-new-tab':
-                    if (url) window.open(url, '_blank');
-                    break;
-                    
-                case 'add-bookmark':
-                    this.showAddDialog('bookmark', isFolder ? itemPath : this.getParentPath(itemPath));
-                    break;
-                    
-                case 'add-folder':
-                    this.showAddDialog('folder', isFolder ? itemPath : this.getParentPath(itemPath));
-                    break;
-                    
-                    
-                case 'copy-url':
-                    if (url) {
-                        await navigator.clipboard.writeText(url);
-                        this.showNotification('链接已复制', 'success');
-                    }
-                    break;
-                    
-                case 'cut':
-                    this.clipboard = { path: itemPath, action: 'cut' };
-                    this.clipboardAction = 'cut';
-                    this.showNotification('已剪切', 'success');
-                    break;
-                    
-                case 'copy':
-                    this.clipboard = { path: itemPath, action: 'copy' };
-                    this.clipboardAction = 'copy';
-                    this.showNotification('已复制', 'success');
-                    break;
-                    
-                case 'paste':
-                    if (this.clipboard) {
-                        await this.pasteItem(isFolder ? itemPath : this.getParentPath(itemPath));
-                    }
-                    break;
-                    
-                    
-                case 'hide':
-                    await window.bookmarkManager.toggleItemVisibility(itemPath);
-                    this.renderBookmarks();
-                    this.showNotification('项目已隐藏', 'success');
-                    break;
-                    
-                case 'delete':
-                    if (confirm('确定要删除这个项目吗？')) {
-                        await window.bookmarkManager.deleteItem(itemPath);
-                        this.renderBookmarks();
-                        this.showNotification('项目已删除', 'success');
-                    }
-                    break;
-            }
-        } catch (error) {
-            console.error('操作失败:', error);
-            this.showNotification('操作失败: ' + error.message, 'error');
-        }
-        
-        this.hideContextMenu();
-    }
-
-    // 显示编辑对话框
-    showEditDialog(itemPath) {
-        const item = window.bookmarkManager.findItemByPath(itemPath);
-        
-        if (!item) {
-            this.showNotification('找不到要编辑的项目', 'error');
-            return;
-        }
-        
-        this.currentEditingItem = itemPath;
-        this.currentParentPath = null;
-        this.currentItemType = null;
-        
-        const dialog = document.getElementById('edit-dialog');
-        const title = document.getElementById('edit-dialog-title');
-        const titleInput = document.getElementById('edit-title');
-        const urlInput = document.getElementById('edit-url');
-        const urlGroup = document.getElementById('edit-url-group');
-        
-        const isFolder = !!(item.children !== undefined);
-        
-        title.textContent = isFolder ? '编辑文件夹' : '编辑书签';
-        titleInput.value = item.title || '';
-        urlInput.value = item.url || '';
-        
-        // 文件夹不显示 URL 输入框
-        urlGroup.style.display = isFolder ? 'none' : 'block';
-        
-        dialog.classList.remove('hidden');
-        titleInput.focus();
-    }
-
-    // 隐藏编辑对话框
-    hideEditDialog() {
-        document.getElementById('edit-dialog').classList.add('hidden');
-        this.currentEditingItem = null;
-    }
-
-    // 保存编辑
-    async saveEdit() {
-        try {
-            const title = document.getElementById('edit-title').value.trim();
-            const url = document.getElementById('edit-url').value.trim();
-            
-            if (!title) {
-                this.showNotification('标题不能为空', 'error');
-                return;
-            }
-            
-            if (this.currentEditingItem) {
-                // 编辑现有项目
-                const updates = { title };
-                if (url) updates.url = url;
-                
-                await window.bookmarkManager.editItem(this.currentEditingItem, updates);
-                this.showNotification('编辑成功', 'success');
-            } else {
-                // 新建项目
-                if (this.currentItemType === 'folder') {
-                    await window.bookmarkManager.addFolder(this.currentParentPath || '', title);
-                    this.showNotification('文件夹创建成功', 'success');
-                } else {
-                    if (!url) {
-                        this.showNotification('书签链接不能为空', 'error');
-                        return;
-                    }
-                    
-                    const bookmark = { title, url };
-                    await window.bookmarkManager.addBookmark(this.currentParentPath || '', bookmark);
-                    this.showNotification('书签创建成功', 'success');
-                }
-            }
-            
-            this.renderBookmarks();
-            this.hideEditDialog();
-            
-        } catch (error) {
-            console.error('保存失败:', error);
-            this.showNotification('保存失败: ' + error.message, 'error');
-        }
-    }
 
     // 渲染书签
     renderBookmarks() {
@@ -732,61 +490,11 @@ class UIManager {
         return html;
     }
     
-    // 渲染右侧导航 - 根据选中状态决定显示内容
+    // 渲染右侧导航
     renderNavigation(bookmarks, currentFolderContent) {
-        if (this.selectedItems.size > 0) {
-            this.renderSelectedBookmarksNav();
-        } else {
-            this.renderSubdirsNav(currentFolderContent);
-        }
+        this.renderSubdirsNav(currentFolderContent);
     }
     
-    // 渲染选中的书签导航
-    renderSelectedBookmarksNav() {
-        const container = document.getElementById('subdirs-nav');
-        const navSection = container.parentElement;
-        const header = navSection.querySelector('h4');
-        
-        if (!container) return;
-        
-        // 更改标题
-        header.innerHTML = '<i class="fas fa-check-square"></i> 已选中的书签';
-        
-        // 获取选中的书签
-        const selectedBookmarks = [];
-        this.selectedItems.forEach(path => {
-            const item = window.bookmarkManager.findItemByPath(path);
-            if (item && item.url) {
-                selectedBookmarks.push({ ...item, path });
-            }
-        });
-        
-        container.innerHTML = selectedBookmarks.map(bookmark => `
-            <div class="nav-item selected-bookmark-item" data-path="${bookmark.path}">
-                <i class="fas fa-bookmark"></i>
-                <span>${bookmark.title}</span>
-                <button class="remove-selection" title="取消选中">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        `).join('');
-        
-        // 绑定取消选中事件
-        container.querySelectorAll('.selected-bookmark-item').forEach(item => {
-            const removeBtn = item.querySelector('.remove-selection');
-            removeBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const path = item.dataset.path;
-                this.toggleBookmarkSelection(path, false);
-            });
-            
-            // 点击整个项目也可以取消选中
-            item.addEventListener('click', () => {
-                const path = item.dataset.path;
-                this.toggleBookmarkSelection(path, false);
-            });
-        });
-    }
     
     // 渲染子目录导航
     renderSubdirsNav(items) {
@@ -1315,288 +1023,7 @@ class UIManager {
         }
     }
 
-    // 显示添加对话框
-    showAddDialog(type, parentPath) {
-        const dialog = document.getElementById('edit-dialog');
-        const title = document.getElementById('edit-dialog-title');
-        const titleInput = document.getElementById('edit-title');
-        const urlInput = document.getElementById('edit-url');
-        const urlGroup = document.getElementById('edit-url-group');
-        
-        this.currentEditingItem = null; // 标记为新建
-        this.currentParentPath = parentPath;
-        this.currentItemType = type;
-        
-        title.textContent = type === 'folder' ? '添加文件夹' : '添加书签';
-        titleInput.value = '';
-        urlInput.value = '';
-        
-        urlGroup.style.display = type === 'folder' ? 'none' : 'block';
-        
-        dialog.classList.remove('hidden');
-        titleInput.focus();
-    }
 
-    // 获取父路径
-    getParentPath(itemPath) {
-        const parts = itemPath.split('/');
-        parts.pop();
-        return parts.join('/');
-    }
-
-    // 粘贴项目
-    async pasteItem(targetPath) {
-        if (!this.clipboard) return;
-        
-        try {
-            const sourceItem = window.bookmarkManager.findItemByPath(this.clipboard.path);
-            if (!sourceItem) {
-                this.showNotification('源项目不存在', 'error');
-                return;
-            }
-            
-            if (this.clipboardAction === 'cut') {
-                await window.bookmarkManager.moveItem(this.clipboard.path, targetPath);
-                this.showNotification('移动成功', 'success');
-                this.clipboard = null;
-            } else {
-                // 复制逻辑
-                const newItem = JSON.parse(JSON.stringify(sourceItem));
-                newItem.title = newItem.title + ' - 副本';
-                
-                if (newItem.children) {
-                    await window.bookmarkManager.addFolder(targetPath, newItem.title);
-                } else {
-                    await window.bookmarkManager.addBookmark(targetPath, newItem);
-                }
-                this.showNotification('复制成功', 'success');
-            }
-            
-            this.renderBookmarks();
-            
-        } catch (error) {
-            console.error('粘贴失败:', error);
-            this.showNotification('粘贴失败: ' + error.message, 'error');
-        }
-    }
-
-    // 切换项目选择状态
-    toggleItemSelection(element) {
-        const path = element.dataset.path;
-        
-        if (this.selectedItems.has(path)) {
-            this.selectedItems.delete(path);
-            element.classList.remove('selected');
-        } else {
-            this.selectedItems.add(path);
-            element.classList.add('selected');
-        }
-        
-        this.updateBatchToolbar();
-        this.updateNavigationDisplay();
-    }
-    
-    // 切换书签选择状态（通过路径）
-    toggleBookmarkSelection(path, forceState = null) {
-        if (forceState === false || (forceState === null && this.selectedItems.has(path))) {
-            this.selectedItems.delete(path);
-        } else if (forceState === true || forceState === null) {
-            this.selectedItems.add(path);
-        }
-        
-        // 更新书签项的视觉状态
-        const bookmarkElement = document.querySelector(`[data-path="${path}"]`);
-        if (bookmarkElement) {
-            if (this.selectedItems.has(path)) {
-                bookmarkElement.classList.add('selected');
-            } else {
-                bookmarkElement.classList.remove('selected');
-            }
-        }
-        
-        this.updateBatchToolbar();
-        this.updateNavigationDisplay();
-    }
-    
-    // 更新导航显示
-    updateNavigationDisplay() {
-        // 重新渲染导航区域
-        const currentFolderContent = this.currentFolderContent || window.bookmarkManager.filteredBookmarks;
-        this.renderNavigation(window.bookmarkManager.filteredBookmarks, currentFolderContent);
-    }
-
-    // 更新批量操作工具栏
-    updateBatchToolbar() {
-        const toolbar = document.getElementById('batch-toolbar');
-        const countElement = document.getElementById('selected-count');
-        
-        countElement.textContent = this.selectedItems.size;
-        
-        if (this.selectedItems.size > 0) {
-            toolbar.classList.remove('hidden');
-        } else {
-            toolbar.classList.add('hidden');
-        }
-    }
-
-    // 清除选择
-    clearSelection() {
-        this.selectedItems.clear();
-        document.querySelectorAll('.selected').forEach(el => {
-            el.classList.remove('selected');
-        });
-        this.updateBatchToolbar();
-    }
-
-    // 批量删除
-    async batchDelete() {
-        if (this.selectedItems.size === 0) return;
-        
-        if (!confirm(`确定要删除选中的 ${this.selectedItems.size} 个项目吗？`)) {
-            return;
-        }
-        
-        try {
-            const paths = Array.from(this.selectedItems);
-            await window.bookmarkManager.deleteItems(paths);
-            
-            this.clearSelection();
-            this.renderBookmarks();
-            this.showNotification(`已删除 ${paths.length} 个项目`, 'success');
-            
-        } catch (error) {
-            console.error('批量删除失败:', error);
-            this.showNotification('批量删除失败: ' + error.message, 'error');
-        }
-    }
-
-    // 批量隐藏
-    async batchHide() {
-        if (this.selectedItems.size === 0) return;
-        
-        try {
-            const paths = Array.from(this.selectedItems);
-            
-            for (const path of paths) {
-                await window.bookmarkManager.toggleItemVisibility(path);
-            }
-            
-            this.clearSelection();
-            this.renderBookmarks();
-            this.showNotification(`已隐藏 ${paths.length} 个项目`, 'success');
-            
-        } catch (error) {
-            console.error('批量隐藏失败:', error);
-            this.showNotification('批量隐藏失败: ' + error.message, 'error');
-        }
-    }
-
-    // 批量移动
-    async batchMove() {
-        if (this.selectedItems.size === 0) return;
-        
-        const targetPath = prompt('请输入目标文件夹路径:');
-        if (!targetPath) return;
-        
-        try {
-            const paths = Array.from(this.selectedItems);
-            
-            for (const path of paths) {
-                await window.bookmarkManager.moveItem(path, targetPath);
-            }
-            
-            this.clearSelection();
-            this.renderBookmarks();
-            this.showNotification(`已移动 ${paths.length} 个项目`, 'success');
-            
-        } catch (error) {
-            console.error('批量移动失败:', error);
-            this.showNotification('批量移动失败: ' + error.message, 'error');
-        }
-    }
-
-    // 批量导出
-    async batchExport() {
-        if (this.selectedItems.size === 0) return;
-        
-        try {
-            const paths = Array.from(this.selectedItems);
-            const selectedBookmarks = [];
-            
-            for (const path of paths) {
-                const item = window.bookmarkManager.findItemByPath(path);
-                if (item) {
-                    selectedBookmarks.push(item);
-                }
-            }
-            
-            const exportData = {
-                bookmarks: selectedBookmarks,
-                exportDate: new Date().toISOString(),
-                count: selectedBookmarks.length
-            };
-            
-            const content = JSON.stringify(exportData, null, 2);
-            const blob = new Blob([content], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `selected_bookmarks_${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            
-            URL.revokeObjectURL(url);
-            this.showNotification(`已导出 ${selectedBookmarks.length} 个项目`, 'success');
-            
-        } catch (error) {
-            console.error('批量导出失败:', error);
-            this.showNotification('批量导出失败: ' + error.message, 'error');
-        }
-    }
-
-    // 处理键盘快捷键
-    handleKeyboard(event) {
-        if (event.ctrlKey || event.metaKey) {
-            switch (event.key) {
-                case 'f':
-                    event.preventDefault();
-                    document.getElementById('search-input').focus();
-                    break;
-                case 's':
-                    event.preventDefault();
-                    this.syncBookmarks();
-                    break;
-                case 'a':
-                    event.preventDefault();
-                    this.selectAll();
-                    break;
-            }
-        }
-        
-        if (event.key === 'Escape') {
-            this.hideContextMenu();
-            this.hideEditDialog();
-            this.hideSettingsPanel();
-            this.hidePasswordPanel();
-            this.clearSelection();
-        }
-        
-        if (event.key === 'Delete' && this.selectedItems.size > 0) {
-            this.batchDelete();
-        }
-    }
-
-    // 全选
-    selectAll() {
-        document.querySelectorAll('.bookmark-item, .folder-header').forEach(el => {
-            const path = el.dataset.path;
-            if (path) {
-                this.selectedItems.add(path);
-                el.classList.add('selected');
-            }
-        });
-        this.updateBatchToolbar();
-    }
 }
 
 // 创建全局 UI 管理器实例

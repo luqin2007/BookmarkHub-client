@@ -285,7 +285,7 @@ class BookmarkHubApp {
         this.stopAutoSync();
         
         // 清理事件监听器
-        document.removeEventListener('keydown', window.uiManager.handleKeyboard);
+        // document.removeEventListener('keydown', window.uiManager.handleKeyboard);
         document.removeEventListener('click', window.uiManager.hideContextMenu);
         document.removeEventListener('contextmenu', window.uiManager.showContextMenu);
         
